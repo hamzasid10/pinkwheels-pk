@@ -36,6 +36,11 @@ function AuthPage() {
   const { role: initialRole } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(initialRole ? "signup" : "signin");
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/dashboard" });
+    });
+  }, [navigate]);
   const [role, setRole] = useState<"rider" | "driver">(initialRole ?? "rider");
   const [form, setForm] = useState({ full_name: "", phone: "", email: "", password: "" });
   const [busy, setBusy] = useState(false);
