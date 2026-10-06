@@ -53,7 +53,7 @@ function DriverRegister() {
     e.preventDefault();
     const filled = Object.fromEntries(Object.keys(f).map((k) => [k, val(k as keyof typeof f)]));
     const parsed = schema.safeParse(filled);
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message);
     if (DOCS.some((d) => !files[d.key])) return toast.error("Please upload all 4 documents");
     if (Object.values(files).some((x) => x && x.size > 10 * 1024 * 1024)) return toast.error("Each file must be under 10MB");
     const uid = me.data!.user.id;
