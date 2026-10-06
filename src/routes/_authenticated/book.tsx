@@ -48,7 +48,7 @@ function BookPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = schema.safeParse({ ...f, rider_name: name, rider_phone: phone });
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message);
     if (!me.data) return;
     setBusy(true);
     const { data, error } = await supabase

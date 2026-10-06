@@ -12,9 +12,8 @@ import { lovable } from "@/integrations/lovable";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    role: s.role === "driver" ? ("driver" as const) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { role?: "driver" } =>
+    s["role"] === "driver" ? { role: "driver" } : {},
   head: () => ({
     meta: [
       { title: "Sign in — Pink Wheel" },
@@ -52,7 +51,7 @@ function AuthPage() {
         navigate({ to: "/dashboard" });
       } else {
         const parsed = signupSchema.safeParse(form);
-        if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+        if (!parsed.success) throw new Error(parsed.error.issues[0]?.message);
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
