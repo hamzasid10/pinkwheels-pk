@@ -17,7 +17,10 @@ import { Route as AuthenticatedBookRouteImport } from './routes/_authenticated/b
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedDriverRegisterRouteImport } from './routes/_authenticated/driver-register'
+import { Route as AuthenticatedOfferRouteImport } from './routes/_authenticated/offer'
 import { Route as AuthenticatedRiderRouteImport } from './routes/_authenticated/rider'
+import { Route as AuthenticatedPoolIndexRouteImport } from './routes/_authenticated/pool.index'
+import { Route as AuthenticatedPoolIdRouteImport } from './routes/_authenticated/pool.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,9 +62,24 @@ const AuthenticatedDriverRegisterRoute =
     path: '/driver-register',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOfferRoute = AuthenticatedOfferRouteImport.update({
+  id: '/offer',
+  path: '/offer',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRiderRoute = AuthenticatedRiderRouteImport.update({
   id: '/rider',
   path: '/rider',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPoolIndexRoute = AuthenticatedPoolIndexRouteImport.update({
+  id: '/pool/',
+  path: '/pool/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPoolIdRoute = AuthenticatedPoolIdRouteImport.update({
+  id: '/pool/$id',
+  path: '/pool/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
@@ -73,7 +91,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/driver': typeof AuthenticatedDriverRoute
   '/driver-register': typeof AuthenticatedDriverRegisterRoute
+  '/offer': typeof AuthenticatedOfferRoute
   '/rider': typeof AuthenticatedRiderRoute
+  '/pool/$id': typeof AuthenticatedPoolIdRoute
+  '/pool/': typeof AuthenticatedPoolIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,7 +104,10 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/driver': typeof AuthenticatedDriverRoute
   '/driver-register': typeof AuthenticatedDriverRegisterRoute
+  '/offer': typeof AuthenticatedOfferRoute
   '/rider': typeof AuthenticatedRiderRoute
+  '/pool/$id': typeof AuthenticatedPoolIdRoute
+  '/pool': typeof AuthenticatedPoolIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,7 +119,10 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
   '/_authenticated/driver-register': typeof AuthenticatedDriverRegisterRoute
+  '/_authenticated/offer': typeof AuthenticatedOfferRoute
   '/_authenticated/rider': typeof AuthenticatedRiderRoute
+  '/_authenticated/pool/$id': typeof AuthenticatedPoolIdRoute
+  '/_authenticated/pool/': typeof AuthenticatedPoolIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,7 +134,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/driver'
     | '/driver-register'
+    | '/offer'
     | '/rider'
+    | '/pool/$id'
+    | '/pool/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,7 +147,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/driver'
     | '/driver-register'
+    | '/offer'
     | '/rider'
+    | '/pool/$id'
+    | '/pool'
   id:
     | '__root__'
     | '/'
@@ -128,7 +161,10 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/driver'
     | '/_authenticated/driver-register'
+    | '/_authenticated/offer'
     | '/_authenticated/rider'
+    | '/_authenticated/pool/$id'
+    | '/_authenticated/pool/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -195,11 +231,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDriverRegisterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/offer': {
+      id: '/_authenticated/offer'
+      path: '/offer'
+      fullPath: '/offer'
+      preLoaderRoute: typeof AuthenticatedOfferRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rider': {
       id: '/_authenticated/rider'
       path: '/rider'
       fullPath: '/rider'
       preLoaderRoute: typeof AuthenticatedRiderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pool/': {
+      id: '/_authenticated/pool/'
+      path: '/pool'
+      fullPath: '/pool/'
+      preLoaderRoute: typeof AuthenticatedPoolIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pool/$id': {
+      id: '/_authenticated/pool/$id'
+      path: '/pool/$id'
+      fullPath: '/pool/$id'
+      preLoaderRoute: typeof AuthenticatedPoolIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -211,7 +268,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
   AuthenticatedDriverRegisterRoute: typeof AuthenticatedDriverRegisterRoute
+  AuthenticatedOfferRoute: typeof AuthenticatedOfferRoute
   AuthenticatedRiderRoute: typeof AuthenticatedRiderRoute
+  AuthenticatedPoolIdRoute: typeof AuthenticatedPoolIdRoute
+  AuthenticatedPoolIndexRoute: typeof AuthenticatedPoolIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -220,7 +280,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDriverRoute: AuthenticatedDriverRoute,
   AuthenticatedDriverRegisterRoute: AuthenticatedDriverRegisterRoute,
+  AuthenticatedOfferRoute: AuthenticatedOfferRoute,
   AuthenticatedRiderRoute: AuthenticatedRiderRoute,
+  AuthenticatedPoolIdRoute: AuthenticatedPoolIdRoute,
+  AuthenticatedPoolIndexRoute: AuthenticatedPoolIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
