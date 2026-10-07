@@ -15,6 +15,13 @@
       "when": 1791401081532,
       "tag": "0001_pink_pool",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791401102054,
+      "tag": "0002_pool_seat_guard_cascade",
+      "breakpoints": true
     }
   ]
 }
