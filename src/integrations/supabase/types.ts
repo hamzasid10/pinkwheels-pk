@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          pool_fee_type: string
+          pool_fee_value: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          pool_fee_type?: string
+          pool_fee_value?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          pool_fee_type?: string
+          pool_fee_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       complaints: {
         Row: {
           created_at: string
@@ -158,6 +179,149 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pool_routes: {
+        Row: {
+          available_seats: number
+          created_at: string
+          departure_date: string
+          departure_time: string
+          destination: string
+          driver_first_name: string
+          driver_id: string
+          driver_rating: number
+          flexible_minutes: number
+          id: string
+          max_route_deviation: number
+          notes: string | null
+          price_per_seat: number
+          start_location: string
+          status: Database["public"]["Enums"]["pool_route_status"]
+          total_seats: number
+          updated_at: string
+          vehicle_id: string | null
+          vehicle_kind: Database["public"]["Enums"]["vehicle_kind"]
+          vehicle_label: string
+        }
+        Insert: {
+          available_seats?: number
+          created_at?: string
+          departure_date: string
+          departure_time: string
+          destination: string
+          driver_first_name: string
+          driver_id: string
+          driver_rating?: number
+          flexible_minutes?: number
+          id?: string
+          max_route_deviation?: number
+          notes?: string | null
+          price_per_seat: number
+          start_location: string
+          status?: Database["public"]["Enums"]["pool_route_status"]
+          total_seats: number
+          updated_at?: string
+          vehicle_id?: string | null
+          vehicle_kind: Database["public"]["Enums"]["vehicle_kind"]
+          vehicle_label?: string
+        }
+        Update: {
+          available_seats?: number
+          created_at?: string
+          departure_date?: string
+          departure_time?: string
+          destination?: string
+          driver_first_name?: string
+          driver_id?: string
+          driver_rating?: number
+          flexible_minutes?: number
+          id?: string
+          max_route_deviation?: number
+          notes?: string | null
+          price_per_seat?: number
+          start_location?: string
+          status?: Database["public"]["Enums"]["pool_route_status"]
+          total_seats?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          vehicle_kind?: Database["public"]["Enums"]["vehicle_kind"]
+          vehicle_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pool_routes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pool_routes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pool_seat_requests: {
+        Row: {
+          created_at: string
+          deviation_km: number
+          dropoff_location: string
+          emergency_contact: string
+          fare: number
+          id: string
+          pickup_location: string
+          pool_route_id: string
+          request_status: Database["public"]["Enums"]["pool_request_status"]
+          rider_first_name: string
+          rider_id: string
+          seats_requested: number
+          trip_pin: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deviation_km?: number
+          dropoff_location: string
+          emergency_contact: string
+          fare?: number
+          id?: string
+          pickup_location: string
+          pool_route_id: string
+          request_status?: Database["public"]["Enums"]["pool_request_status"]
+          rider_first_name: string
+          rider_id: string
+          seats_requested?: number
+          trip_pin?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deviation_km?: number
+          dropoff_location?: string
+          emergency_contact?: string
+          fare?: number
+          id?: string
+          pickup_location?: string
+          pool_route_id?: string
+          request_status?: Database["public"]["Enums"]["pool_request_status"]
+          rider_first_name?: string
+          rider_id?: string
+          seats_requested?: number
+          trip_pin?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pool_seat_requests_pool_route_id_fkey"
+            columns: ["pool_route_id"]
+            isOneToOne: false
+            referencedRelation: "pool_routes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -400,10 +564,28 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_pool_driver: {
+        Args: { _route: string; _user: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "driver" | "rider"
       driver_status: "pending" | "approved" | "rejected" | "suspended"
+      pool_request_status:
+        | "pending"
+        | "accepted"
+        | "declined"
+        | "cancelled"
+        | "completed"
+      pool_route_status:
+        | "open"
+        | "almost_full"
+        | "full"
+        | "started"
+        | "completed"
+        | "cancelled"
+        | "suspended"
       ride_status:
         | "requested"
         | "driver_assigned"
@@ -541,6 +723,22 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "driver", "rider"],
       driver_status: ["pending", "approved", "rejected", "suspended"],
+      pool_request_status: [
+        "pending",
+        "accepted",
+        "declined",
+        "cancelled",
+        "completed",
+      ],
+      pool_route_status: [
+        "open",
+        "almost_full",
+        "full",
+        "started",
+        "completed",
+        "cancelled",
+        "suspended",
+      ],
       ride_status: [
         "requested",
         "driver_assigned",
