@@ -15,7 +15,7 @@ const oauth = () => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
-    authorization_id: typeof s.authorization_id === "string" ? s.authorization_id : "",
+    authorization_id: typeof s["authorization_id"] === "string" ? s["authorization_id"] : "",
   }),
   head: () => ({ meta: [{ title: "Connect an app — Pink Wheel" }, { name: "robots", content: "noindex" }] }),
   beforeLoad: async ({ search, location }) => {
