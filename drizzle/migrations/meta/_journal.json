@@ -50,6 +50,13 @@
       "when": 1791570150197,
       "tag": "0006_maps_rides_pool",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791572293227,
+      "tag": "0007_profile_after_verification",
+      "breakpoints": true
     }
   ]
 }
