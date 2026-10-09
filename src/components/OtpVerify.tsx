@@ -141,12 +141,12 @@ export function OtpVerify({
 }
 
 export const COUNTRY_CODES = [
-  { code: "+92", label: "🇵🇰 +92" },
-  { code: "+971", label: "🇦🇪 +971" },
-  { code: "+966", label: "🇸🇦 +966" },
-  { code: "+44", label: "🇬🇧 +44" },
-  { code: "+1", label: "🇺🇸 +1" },
-  { code: "+91", label: "🇮🇳 +91" },
+  { code: "+92", label: "PK +92" },
+  { code: "+971", label: "AE +971" },
+  { code: "+966", label: "SA +966" },
+  { code: "+44", label: "UK +44" },
+  { code: "+1", label: "US +1" },
+  { code: "+91", label: "IN +91" },
 ];
 
 /** Returns an E.164 number or null if invalid. */
