@@ -215,7 +215,7 @@ function AdminPage() {
   );
 }
 
-function DocThumb({ path }: { path?: string }) {
+function DocThumb({ path }: { path?: string | undefined }) {
   const url = useQuery({
     queryKey: ["doc-thumb", path], enabled: !!path, staleTime: 240000,
     queryFn: async () => (await supabase.storage.from("driver-docs").createSignedUrl(path!, 300)).data?.signedUrl ?? null,
