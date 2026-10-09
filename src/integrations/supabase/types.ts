@@ -180,6 +180,44 @@ export type Database = {
         }
         Relationships: []
       }
+      pool_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          driver_id: string | null
+          id: string
+          pool_seat_id: string
+          rater_id: string
+          stars: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          pool_seat_id: string
+          rater_id: string
+          stars: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          pool_seat_id?: string
+          rater_id?: string
+          stars?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pool_ratings_pool_seat_id_fkey"
+            columns: ["pool_seat_id"]
+            isOneToOne: true
+            referencedRelation: "pool_seat_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pool_routes: {
         Row: {
           available_seats: number
