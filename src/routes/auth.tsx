@@ -235,7 +235,7 @@ function AuthPage() {
               </p>
               <p className="mt-3 text-center text-sm text-muted-foreground">
                 {mode === "signup" ? "Already have an account?" : "New to Pink Wheel?"}{" "}
-                <button className="font-semibold text-primary" onClick={() => setMode(mode === "signup" ? "signin" : "signup")}>
+                <button className="font-semibold text-primary" onClick={() => setMode(mode === "signup" ? "password" : "signup")}>
                   {mode === "signup" ? "Sign in" : "Create account"}
                 </button>
               </p>
