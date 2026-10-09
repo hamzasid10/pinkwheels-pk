@@ -61,14 +61,14 @@ function isCredentialedPreview() {
 export function GoogleMap({
   pins = [], polyline, onPinDrag, onMapClick, className, fitKey, center,
 }: {
-  pins?: MapPin[];
-  polyline?: string | null;
-  onPinDrag?: (id: string, pos: LatLng) => void;
-  onMapClick?: (pos: LatLng) => void;
-  className?: string;
+  pins?: MapPin[] | undefined;
+  polyline?: string | null | undefined;
+  onPinDrag?: ((id: string, pos: LatLng) => void) | undefined;
+  onMapClick?: ((pos: LatLng) => void) | undefined;
+  className?: string | undefined;
   /** Changing this re-fits the map to all pins + route. */
-  fitKey?: string;
-  center?: LatLng;
+  fitKey?: string | undefined;
+  center?: LatLng | undefined;
 }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);

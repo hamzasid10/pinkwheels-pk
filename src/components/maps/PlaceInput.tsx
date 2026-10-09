@@ -17,9 +17,9 @@ export function PlaceInput({
   value: Place | null;
   onChange: (p: Place | null) => void;
   placeholder: string;
-  near?: LatLng;
-  allowGps?: boolean;
-  dot?: "pickup" | "dropoff";
+  near?: LatLng | undefined;
+  allowGps?: boolean | undefined;
+  dot?: "pickup" | "dropoff" | undefined;
 }) {
   const auto = useServerFn(placeAutocomplete);
   const details = useServerFn(placeDetails);

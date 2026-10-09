@@ -13,7 +13,7 @@ export async function mapsFetch(path: string, init: { method?: string; body?: un
   const res = await fetch(`${GATEWAY_URL}${path}`, {
     method: init.method ?? (init.body ? "POST" : "GET"),
     headers,
-    body: init.body ? JSON.stringify(init.body) : undefined,
+    body: init.body ? JSON.stringify(init.body) : null,
   });
   if (res.status === 403) {
     const text = await res.text();

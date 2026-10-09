@@ -24,6 +24,7 @@ export function AdminFares() {
 
   async function save(v: Vehicle) {
     const x = draft[v];
+    if (!x) return;
     const n = { base_fare: Number(x.base_fare), per_km: Number(x.per_km), per_min: Number(x.per_min || 0), min_fare: Number(x.min_fare || 0) };
     if (!x.base_fare || !x.per_km || Object.values(n).some((y) => !Number.isFinite(y) || y < 0)) return toast.error("Enter valid non-negative numbers");
     const { error } = await supabase.from("fare_settings").upsert({ vehicle: v, ...n, base_fare: Math.round(n.base_fare), min_fare: Math.round(n.min_fare), updated_at: new Date().toISOString() });

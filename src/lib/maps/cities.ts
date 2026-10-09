@@ -47,7 +47,7 @@ export function decodePolyline(str: string): LatLng[] {
 export function distanceToPath(p: LatLng, path: LatLng[]) {
   if (!path.length) return Infinity;
   let best = Infinity;
-  for (let i = 0; i < path.length; i += Math.max(1, Math.floor(path.length / 400))) best = Math.min(best, km(p, path[i]));
+  for (let i = 0; i < path.length; i += Math.max(1, Math.floor(path.length / 400))) best = Math.min(best, km(p, path[i]!));
   return best;
 }
 
