@@ -27,6 +27,8 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
       <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Logo />
+          <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/account" })}>Account</Button>
           <Button
             variant="ghost"
             size="sm"
@@ -38,6 +40,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           >
             <LogOut /> Sign out
           </Button>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-6">
