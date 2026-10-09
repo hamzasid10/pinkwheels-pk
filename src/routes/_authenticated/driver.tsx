@@ -22,6 +22,7 @@ function DriverDashboard() {
   const me = useMe();
   const uid = me.data?.user.id;
   const [pin, setPin] = useState("");
+  const [onlineBusy, setOnlineBusy] = useState(false);
 
   const driver = useQuery({
     queryKey: ["driver", uid], enabled: !!uid,
@@ -37,7 +38,7 @@ function DriverDashboard() {
   });
   const locErr = useShareLocation(uid, !!driver.data?.online && driver.data?.status === "approved" && !!me.data?.profile?.location_sharing);
 
-  if (driver.isLoading || me.isLoading) return <AppShell title="Driver dashboard"><p className="text-muted-foreground">Loading…</p></AppShell>;
+  if (driver.isLoading || me.isLoading || rides.isLoading || docs.isLoading) return <AppShell title="Driver profile"><p className="text-muted-foreground">Loading…</p></AppShell>;
   if (driver.isError || rides.isError || docs.isError) return <AppShell title="Driver profile"><p role="alert">Your driver information couldn't load.</p><Button onClick={() => { driver.refetch(); rides.refetch(); docs.refetch(); }}>Try again</Button></AppShell>;
   if (!driver.data || !uid) {
     return <AppShell title="Driver dashboard"><Panel><p>You haven't applied yet.</p><Button className="mt-3" variant="hero" asChild><Link to="/driver-register">Start application</Link></Button></Panel></AppShell>;
@@ -54,15 +55,18 @@ function DriverDashboard() {
   }
 
   async function toggleOnline() {
-    if (d.status !== "approved" || me.data?.profile?.suspended) return;
+    if (onlineBusy || d.status !== "approved" || me.data?.profile?.suspended) return;
     if (!d.online && !sharing) {
       document.getElementById("driver-safety")?.scrollIntoView({ behavior: "smooth" });
       toast.info("Turn on location sharing before going online.");
       return;
     }
-    const { error } = await supabase.from("drivers").update({ online: !d.online }).eq("user_id", d.user_id);
-    if (error) return toast.error(error.message);
-    await driver.refetch();
+    setOnlineBusy(true);
+    try {
+      const { error } = await supabase.from("drivers").update({ online: !d.online }).eq("user_id", d.user_id);
+      if (error) return toast.error(error.message);
+      await driver.refetch();
+    } finally { setOnlineBusy(false); }
   }
 
   return (
@@ -124,8 +128,6 @@ function DriverDashboard() {
           )}
         </Panel>
 
-        <div id="driver-pool" className="scroll-mt-24 md:col-span-2"><DriverPoolSection uid={uid} approved={d.status === "approved"} /></div>
-
         <Panel title="Documents status" icon={<FileCheck className="h-4 w-4" />}>
           <ul className="space-y-2 text-sm">
             {(docs.data ?? []).map((x) => (
@@ -142,6 +144,7 @@ function DriverDashboard() {
           <Button variant="outline" className="mt-3" asChild><a href="mailto:Hamza.icaruss@gmail.com">Contact support</a></Button>
         </Panel>
       </div>}
+      <div id="driver-pool" className="mt-7 scroll-mt-24"><DriverPoolSection uid={uid} approved={d.status === "approved" && !me.data?.profile?.suspended} /></div>
       <p className="mt-7 text-center text-xs text-muted-foreground">Pink Wheel · Women Moving Women</p>
     </AppShell>
   );

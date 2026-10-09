@@ -108,8 +108,6 @@
 @utility font-display { font-family: var(--font-display); }
 @utility animate-pulse-soft { animation: pulse-soft 2.2s ease-in-out infinite; }
 .driver-profile { --primary: var(--driver-primary); }
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 @utility map-grid {
   background-color: var(--muted);
   background-image:
