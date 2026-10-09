@@ -2,3 +2,5 @@
 - [x] Apply branding to headers, sign-in, landing, About, and loading screens.
 - [x] Add favicon and home-screen icons with safe padding.
 - [x] Verify branding and existing page navigation.
+- [ ] Redesign the driver profile with real data, private verification details and working editing/navigation.
+- [ ] Verify driver profile interactions, approval gating and mobile/desktop layouts.
