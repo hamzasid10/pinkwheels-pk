@@ -26,6 +26,7 @@ import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDriverRegisterRouteImport } from './routes/_authenticated/driver-register'
 import { Route as AuthenticatedOfferRouteImport } from './routes/_authenticated/offer'
 import { Route as AuthenticatedRiderRouteImport } from './routes/_authenticated/rider'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedPoolIndexRouteImport } from './routes/_authenticated/pool.index'
 import { Route as AuthenticatedPoolIdRouteImport } from './routes/_authenticated/pool.$id'
 
@@ -114,6 +115,11 @@ const AuthenticatedRiderRoute = AuthenticatedRiderRouteImport.update({
   path: '/rider',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPoolIndexRoute = AuthenticatedPoolIndexRouteImport.update({
   id: '/pool/',
   path: '/pool/',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/driver-register': typeof AuthenticatedDriverRegisterRoute
   '/offer': typeof AuthenticatedOfferRoute
   '/rider': typeof AuthenticatedRiderRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pool/$id': typeof AuthenticatedPoolIdRoute
   '/pool/': typeof AuthenticatedPoolIndexRoute
 }
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/driver-register': typeof AuthenticatedDriverRegisterRoute
   '/offer': typeof AuthenticatedOfferRoute
   '/rider': typeof AuthenticatedRiderRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/pool/$id': typeof AuthenticatedPoolIdRoute
   '/pool': typeof AuthenticatedPoolIndexRoute
 }
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/_authenticated/driver-register': typeof AuthenticatedDriverRegisterRoute
   '/_authenticated/offer': typeof AuthenticatedOfferRoute
   '/_authenticated/rider': typeof AuthenticatedRiderRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/pool/$id': typeof AuthenticatedPoolIdRoute
   '/_authenticated/pool/': typeof AuthenticatedPoolIndexRoute
 }
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/driver-register'
     | '/offer'
     | '/rider'
+    | '/.lovable/oauth/consent'
     | '/pool/$id'
     | '/pool/'
   fileRoutesByTo: FileRoutesByTo
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/driver-register'
     | '/offer'
     | '/rider'
+    | '/.lovable/oauth/consent'
     | '/pool/$id'
     | '/pool'
   id:
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver-register'
     | '/_authenticated/offer'
     | '/_authenticated/rider'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/pool/$id'
     | '/_authenticated/pool/'
   fileRoutesById: FileRoutesById
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SafetyRoute: typeof SafetyRoute
   TermsRoute: typeof TermsRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -384,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRiderRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/pool/': {
       id: '/_authenticated/pool/'
       path: '/pool'
@@ -440,6 +460,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SafetyRoute: SafetyRoute,
   TermsRoute: TermsRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
