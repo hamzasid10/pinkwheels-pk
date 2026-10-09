@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Car, FileCheck, Headphones, Inbox, Star, Wallet, CheckCircle2 } from "lucide-react";
+import { Car, FileCheck, Headphones, Inbox } from "lucide-react";
 import { AppShell, Panel, SafetyActions, StatusPill, StatusTrack } from "@/components/Brand";
 import { RideMap, useShareLocation } from "@/components/maps/RideMap";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { DriverPoolSection } from "@/components/Pool";
+import { DriverProfile } from "@/components/DriverProfile";
 import { pkr, useMe, type RideStatus } from "@/lib/pink";
 
 export const Route = createFileRoute("/_authenticated/driver")({
-  head: () => ({ meta: [{ title: "Driver Dashboard — Pink Wheel" }, { name: "description", content: "Manage rides and earnings." }, { property: "og:title", content: "Driver Dashboard — Pink Wheel" }, { property: "og:description", content: "Manage rides and earnings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Driver Profile — Pink Wheel" }, { name: "description", content: "Your verified driver profile, real trip earnings and ride controls." }, { property: "og:title", content: "Driver Profile — Pink Wheel" }, { property: "og:description", content: "Your verified driver profile, real trip earnings and ride controls." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: DriverDashboard,
 });
 
@@ -21,23 +22,25 @@ function DriverDashboard() {
   const me = useMe();
   const uid = me.data?.user.id;
   const [pin, setPin] = useState("");
+  const [onlineBusy, setOnlineBusy] = useState(false);
 
   const driver = useQuery({
     queryKey: ["driver", uid], enabled: !!uid,
-    queryFn: async () => (await supabase.from("drivers").select("*").eq("user_id", uid!).maybeSingle()).data,
+    queryFn: async () => { if (!uid) return null; const { data, error } = await supabase.from("drivers").select("*").eq("user_id", uid).maybeSingle(); if (error) throw error; return data; },
   });
   const docs = useQuery({
     queryKey: ["docs", uid], enabled: !!uid,
-    queryFn: async () => (await supabase.from("driver_documents").select("*").eq("driver_id", uid!)).data ?? [],
+    queryFn: async () => { if (!uid) return []; const { data, error } = await supabase.from("driver_documents").select("*").eq("driver_id", uid); if (error) throw error; return data ?? []; },
   });
   const rides = useQuery({
     queryKey: ["driver-rides", uid], enabled: !!uid, refetchInterval: 8000,
-    queryFn: async () => (await supabase.from("ride_requests").select("*").eq("driver_id", uid!).order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => { if (!uid) return []; const { data, error } = await supabase.from("ride_requests").select("*").eq("driver_id", uid).order("created_at", { ascending: false }); if (error) throw error; return data ?? []; },
   });
   const locErr = useShareLocation(uid, !!driver.data?.online && driver.data?.status === "approved" && !!me.data?.profile?.location_sharing);
 
-  if (driver.isLoading || me.isLoading) return <AppShell title="Driver dashboard"><p className="text-muted-foreground">Loading…</p></AppShell>;
-  if (!driver.data) {
+  if (driver.isLoading || me.isLoading || rides.isLoading || docs.isLoading) return <AppShell title="Driver profile"><p className="text-muted-foreground">Loading…</p></AppShell>;
+  if (driver.isError || rides.isError || docs.isError) return <AppShell title="Driver profile"><p role="alert">Your driver information couldn't load.</p><Button onClick={() => { driver.refetch(); rides.refetch(); docs.refetch(); }}>Try again</Button></AppShell>;
+  if (!driver.data || !uid) {
     return <AppShell title="Driver dashboard"><Panel><p>You haven't applied yet.</p><Button className="mt-3" variant="hero" asChild><Link to="/driver-register">Start application</Link></Button></Panel></AppShell>;
   }
   const d = driver.data;
@@ -45,92 +48,51 @@ function DriverDashboard() {
   const all = rides.data ?? [];
   const requests = all.filter((r) => r.status === "driver_assigned");
   const current = all.find((r) => r.status === "driver_arriving" || r.status === "ride_started");
-  const completed = all.filter((r) => r.status === "completed");
-  const today = new Date().toISOString().slice(0, 10);
-  const todayEarn = completed.filter((r) => r.updated_at.slice(0, 10) === today).reduce((s, r) => s + r.fare, 0);
-  const totalEarn = completed.reduce((s, r) => s + r.fare, 0);
-
   async function setStatus(id: string, status: RideStatus) {
     const { error } = await supabase.from("ride_requests").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     rides.refetch();
   }
 
-  if (d.status !== "approved") {
-    const msg: Record<string, [string, string]> = {
-      incomplete: ["Incomplete application", "Finish your application to submit it for review."],
-      pending: ["Application submitted — under review", "Our team is checking your documents. You can't go online or receive rides until you're approved."],
-      info_requested: ["More information required", d.admin_note ?? "Please update your application."],
-      rejected: ["Application not approved", `Reason: ${d.admin_note ?? "not given"}. You can update and resubmit.`],
-      suspended: ["Account suspended", d.admin_note ?? "Contact support for help."],
-    };
-    const [t, body] = msg[d.status] ?? ["Status", d.status];
-    return (
-      <AppShell title="Driver application">
-        <Panel className="mx-auto max-w-lg text-center">
-          <FileCheck className="mx-auto h-12 w-12 text-primary" />
-          <p className="mt-4 text-lg font-semibold">{t}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-          {["incomplete", "info_requested", "rejected"].includes(d.status) && (
-            <Button className="mt-5" variant="hero" asChild><Link to="/driver-register">{d.status === "incomplete" ? "Continue application" : "Update & resubmit"}</Link></Button>
-          )}
-        </Panel>
-      </AppShell>
-    );
+  async function toggleOnline() {
+    if (onlineBusy || d.status !== "approved" || me.data?.profile?.suspended) return;
+    if (!d.online && !sharing) {
+      document.getElementById("driver-safety")?.scrollIntoView({ behavior: "smooth" });
+      toast.info("Turn on location sharing before going online.");
+      return;
+    }
+    setOnlineBusy(true);
+    try {
+      const { error } = await supabase.from("drivers").update({ online: !d.online }).eq("user_id", d.user_id);
+      if (error) return toast.error(error.message);
+      await driver.refetch();
+    } finally { setOnlineBusy(false); }
   }
 
   return (
-    <AppShell title={`Hello, ${d.full_name.split(" ")[0]}`}>
-      {d.status !== "approved" && (
-        <div className="mb-5 rounded-2xl border border-primary/30 bg-accent p-4 text-sm">
-          Application status: <b className="capitalize">{d.status}</b>.{" "}
-          {d.status === "pending" && "Your application has been received and is under verification."}
-          {d.status === "rejected" && "Unfortunately your application was not approved. Contact support for details."}
-          {d.status === "suspended" && "Your account is suspended. Contact support."}
-        </div>
-      )}
-      <div className="grid gap-5 md:grid-cols-2">
-        <Panel className="space-y-4 md:col-span-2">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="font-semibold">Share my live location</p>
-              <p className="text-sm text-muted-foreground">Only while you're online. Riders see you only on their own assigned ride; others see an anonymous dot.</p>
-            </div>
-            <Switch checked={!!sharing} onCheckedChange={async (v) => {
+    <AppShell title="Driver profile">
+      <DriverProfile driver={d} rides={all} docs={docs.data ?? []} sharing={!!sharing} suspended={!!me.data?.profile?.suspended} onOnline={toggleOnline} />
+      <div id="driver-safety" className="mx-auto mb-7 max-w-3xl scroll-mt-24">
+        <h2 className="mb-3 font-sans text-sm font-bold">Safety & location</h2>
+        <Panel>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
+            <div className="min-w-0"><p className="font-semibold">Share my live location</p><p className="mt-1 text-xs text-muted-foreground">Only while online. Exact location is visible only to your assigned rider and authorized admins.</p></div>
+            <Switch aria-label="Share my live location" checked={!!sharing} disabled={d.status !== "approved" || !!me.data?.profile?.suspended} onCheckedChange={async (v) => {
               if (v && !window.confirm("Allow Pink Wheel to use your GPS location while you're online?")) return;
-              await supabase.from("profiles").update({ location_sharing: v }).eq("id", uid!);
-              if (!v && d.online) await supabase.from("drivers").update({ online: false }).eq("user_id", uid!);
+              const { error } = await supabase.from("profiles").update({ location_sharing: v }).eq("id", d.user_id);
+              if (error) return toast.error(error.message);
+              if (!v && d.online) {
+                const result = await supabase.from("drivers").update({ online: false }).eq("user_id", d.user_id);
+                if (result.error) toast.error(result.error.message);
+              }
               me.refetch(); driver.refetch();
             }} />
           </div>
-          <div className="flex items-center justify-between gap-4 border-t pt-4">
-            <div>
-              <p className="font-semibold">{d.online ? "You're online" : "You're offline"}</p>
-              <p className="text-sm text-muted-foreground">{d.online ? "Ready to receive ride requests" : sharing ? "Go online to receive rides" : "Turn on location sharing to go online"}</p>
-              {locErr && d.online && <p className="text-xs text-destructive">{locErr}</p>}
-            </div>
-            <Switch checked={d.online} disabled={d.status !== "approved" || (!sharing && !d.online)} onCheckedChange={async (v) => {
-              await supabase.from("drivers").update({ online: v }).eq("user_id", uid!);
-              driver.refetch();
-            }} />
-          </div>
+          {locErr && d.online && <p role="alert" className="mt-2 text-xs text-destructive">{locErr}</p>}
+          <div className="mt-4 flex flex-wrap gap-3 border-t pt-4"><Button variant="outline" size="sm" asChild><Link to="/safety">Safety guidelines</Link></Button><Button variant="outline" size="sm" asChild><a href="tel:15">Emergency · 15</a></Button></div>
         </Panel>
-
-        <div className="grid grid-cols-2 gap-3 md:col-span-2 md:grid-cols-4">
-          {[
-            { icon: Wallet, l: "Today's earnings", v: pkr(todayEarn) },
-            { icon: Wallet, l: "Total earnings", v: pkr(totalEarn) },
-            { icon: CheckCircle2, l: "Completed rides", v: completed.length },
-            { icon: Star, l: "Driver rating", v: `${Number(d.rating).toFixed(1)} ★` },
-          ].map((s) => (
-            <div key={s.l} className="rounded-2xl border bg-card p-4 shadow-soft">
-              <s.icon className="h-5 w-5 text-primary" />
-              <p className="mt-2 font-display text-2xl font-semibold">{s.v}</p>
-              <p className="text-xs text-muted-foreground">{s.l}</p>
-            </div>
-          ))}
-        </div>
-
+      </div>
+      {d.status === "approved" && <div id="driver-rides" className="grid scroll-mt-24 gap-5 md:grid-cols-2">
         <Panel title="New ride requests" icon={<Inbox className="h-4 w-4" />}>
           {requests.length === 0 ? <p className="text-sm text-muted-foreground">No new requests. Rides assigned to you will appear here.</p> : (
             <ul className="space-y-3">
@@ -166,8 +128,6 @@ function DriverDashboard() {
           )}
         </Panel>
 
-        <DriverPoolSection uid={uid!} approved={d.status === "approved"} />
-
         <Panel title="Documents status" icon={<FileCheck className="h-4 w-4" />}>
           <ul className="space-y-2 text-sm">
             {(docs.data ?? []).map((x) => (
@@ -183,7 +143,9 @@ function DriverDashboard() {
           <p className="text-sm text-muted-foreground">Our 24/7 driver support team is here for you.</p>
           <Button variant="outline" className="mt-3" asChild><a href="mailto:Hamza.icaruss@gmail.com">Contact support</a></Button>
         </Panel>
-      </div>
+      </div>}
+      <div id="driver-pool" className="mt-7 scroll-mt-24"><DriverPoolSection uid={uid} approved={d.status === "approved" && !me.data?.profile?.suspended} /></div>
+      <p className="mt-7 text-center text-xs text-muted-foreground">Pink Wheel · Women Moving Women</p>
     </AppShell>
   );
 }
