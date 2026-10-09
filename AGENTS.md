@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- AI calls live in src/lib/ai/*.server.ts (Lovable AI Gateway, Responses API, streamed + structured output) and are exposed via auth-protected *.functions.ts server fns — keeps the key and prompts server-only.
