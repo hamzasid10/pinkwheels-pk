@@ -1,17 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CheckCircle2 } from "lucide-react";
-import { AppShell, MapPlaceholder, Panel } from "@/components/Brand";
+import { AppShell, Panel } from "@/components/Brand";
+import { GoogleMap, type MapPin } from "@/components/maps/GoogleMap";
+import { PlaceInput, type Place } from "@/components/maps/PlaceInput";
 import { RouteStatusPill } from "@/components/Pool";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { estimateFare, pkr, useMe } from "@/lib/pink";
+import { computeRoute } from "@/lib/maps/maps.functions";
+import { nearestCity } from "@/lib/maps/cities";
+import { pkr, routeFare, useFares, useMe } from "@/lib/pink";
 import { FLEX_OPTIONS, fmtDate, fmtTime, type PoolRoute } from "@/lib/pool";
 
 export const Route = createFileRoute("/_authenticated/offer")({
@@ -44,6 +49,18 @@ function OfferPage() {
   const [f, setF] = useState({ start_location: "", destination: "", departure_date: today, departure_time: "", flexible_minutes: 10, vehicle_id: "", total_seats: 2, price_per_seat: 300, max_route_deviation: 2, notes: "" });
   const [busy, setBusy] = useState(false);
   const [posted, setPosted] = useState<PoolRoute | null>(null);
+  const [start, setStart] = useState<Place | null>(null);
+  const [dest, setDest] = useState<Place | null>(null);
+  const [info, setInfo] = useState<{ distanceKm: number; durationMin: number; polyline: string } | null>(null);
+  const fares = useFares();
+  const route = useServerFn(computeRoute);
+  useEffect(() => {
+    if (!start || !dest) { setInfo(null); return; }
+    let live = true;
+    route({ data: { from: start, to: dest, mode: "DRIVE" } }).then((r) => live && setInfo(r)).catch((e) => toast.error((e as Error).message));
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start?.lat, start?.lng, dest?.lat, dest?.lng]);
 
   if (me.isLoading || driver.isLoading) return <AppShell title="Offer My Route"><p className="text-muted-foreground">Loading…</p></AppShell>;
   if (!driver.data || driver.data.status !== "approved") {
@@ -60,11 +77,17 @@ function OfferPage() {
 
   const vlist = vehicles.data ?? [];
   const vehicle = vlist.find((v) => v.id === f.vehicle_id) ?? vlist[0];
-  const privateFare = vehicle ? estimateFare(vehicle.kind, f.start_location, f.destination) : 0;
+  const privateFare = vehicle && info ? routeFare(fares.data?.find((x) => x.vehicle === vehicle.kind), info.distanceKm, info.durationMin) ?? 0 : 0;
+  const pins: MapPin[] = [
+    ...(start ? [{ id: "pickup", pos: start, kind: "pickup" as const }] : []),
+    ...(dest ? [{ id: "dropoff", pos: dest, kind: "dropoff" as const }] : []),
+  ];
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const p = schema.safeParse({ ...f, notes: f.notes || undefined });
+    if (!start || !dest) return toast.error("Choose start and destination from the suggestions");
+    if (!info) return toast.error("Waiting for the route…");
+    const p = schema.safeParse({ ...f, start_location: start.address.slice(0, 120), destination: dest.address.slice(0, 120), notes: f.notes || undefined });
     if (!p.success) return toast.error(p.error.issues[0]?.message ?? "Check the form");
     if (!vehicle) return toast.error("Add a vehicle to your profile first");
     if (f.departure_date < today) return toast.error("Date can't be in the past");
@@ -72,6 +95,8 @@ function OfferPage() {
     const { data, error } = await supabase.from("pool_routes").insert({
       ...p.data, notes: p.data.notes ?? null, driver_id: uid!, driver_first_name: "", vehicle_id: vehicle.id, vehicle_kind: vehicle.kind,
       vehicle_label: vehicle.make_model, flexible_minutes: f.flexible_minutes, max_route_deviation: f.max_route_deviation,
+      start_lat: start.lat, start_lng: start.lng, dest_lat: dest.lat, dest_lng: dest.lng,
+      start_city: nearestCity(start).name, distance_km: info.distanceKm, duration_min: info.durationMin, route_polyline: info.polyline,
     }).select().single();
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -85,7 +110,7 @@ function OfferPage() {
           <CheckCircle2 className="mx-auto h-12 w-12 text-success" />
           <h2 className="mt-3 font-display text-2xl font-semibold">Your Pink Pool route is live.</h2>
           <div className="mt-5 space-y-2 text-left text-sm">
-            <MapPlaceholder from={posted.start_location} to={posted.destination} />
+            <GoogleMap className="h-52" pins={pins} polyline={posted.route_polyline} fitKey="posted" />
             <Row l="Route" v={`${posted.start_location} → ${posted.destination}`} />
             <Row l="Departure" v={`${fmtDate(posted.departure_date)} · ${fmtTime(posted.departure_time)}`} />
             <Row l="Available seats" v={String(posted.available_seats)} />
@@ -104,8 +129,14 @@ function OfferPage() {
         <Panel>
           <p className="text-sm text-muted-foreground">Already travelling somewhere? Offer your empty seats to verified women going the same way.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field l="Starting location"><Input value={f.start_location} maxLength={120} placeholder="e.g. Lake City" onChange={(e) => setF({ ...f, start_location: e.target.value })} /></Field>
-            <Field l="Destination"><Input value={f.destination} maxLength={120} placeholder="e.g. DHA Phase 8" onChange={(e) => setF({ ...f, destination: e.target.value })} /></Field>
+            <Field l="Starting location"><PlaceInput value={start} onChange={setStart} placeholder="e.g. Lake City, Lahore" allowGps dot="pickup" /></Field>
+            <Field l="Destination"><PlaceInput value={dest} onChange={setDest} placeholder="e.g. Blue Area, Islamabad" dot="dropoff" /></Field>
+            {(start || dest) && (
+              <div className="sm:col-span-2">
+                <GoogleMap className="h-56" pins={pins} polyline={info?.polyline} fitKey={`${start?.lat},${dest?.lat},${info?.polyline?.length}`} />
+                {info && <p className="mt-1.5 text-xs text-muted-foreground">{info.distanceKm} km · about {info.durationMin} min driving</p>}
+              </div>
+            )}
             <Field l="Date"><Input type="date" min={today} value={f.departure_date} onChange={(e) => setF({ ...f, departure_date: e.target.value })} /></Field>
             <Field l="Departure time"><Input type="time" value={f.departure_time} onChange={(e) => setF({ ...f, departure_time: e.target.value })} /></Field>
           </div>

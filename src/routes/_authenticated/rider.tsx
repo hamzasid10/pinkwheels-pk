@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Car, Clock, Headphones, History, MapPin, Phone, Plus, Trash2, User } from "lucide-react";
-import { AppShell, MapPlaceholder, Panel, SafetyActions, StatusPill, StatusTrack } from "@/components/Brand";
+import { AppShell, Panel, SafetyActions, StatusPill, StatusTrack } from "@/components/Brand";
+import { RideMap } from "@/components/maps/RideMap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,7 +79,7 @@ function RiderDashboard() {
                 <StatusPill status={upcoming.status as RideStatus} />
               </div>
               <StatusTrack status={upcoming.status as RideStatus} />
-              <MapPlaceholder from={upcoming.pickup} to={upcoming.destination} />
+              <RideMap ride={upcoming} />
               <div className="grid gap-3 text-sm sm:grid-cols-4">
                 <div><p className="text-muted-foreground">When</p><p className="font-medium">{upcoming.ride_date} · {upcoming.ride_time.slice(0, 5)}</p></div>
                 <div><p className="text-muted-foreground">Vehicle</p><p className="font-medium capitalize">{upcoming.vehicle}</p></div>

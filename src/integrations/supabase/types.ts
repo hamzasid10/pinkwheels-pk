@@ -108,6 +108,38 @@ export type Database = {
           },
         ]
       }
+      driver_locations: {
+        Row: {
+          driver_id: string
+          heading: number | null
+          lat: number
+          lng: number
+          updated_at: string
+        }
+        Insert: {
+          driver_id: string
+          heading?: number | null
+          lat: number
+          lng: number
+          updated_at?: string
+        }
+        Update: {
+          driver_id?: string
+          heading?: number | null
+          lat?: number
+          lng?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           city: string
@@ -180,6 +212,33 @@ export type Database = {
         }
         Relationships: []
       }
+      fare_settings: {
+        Row: {
+          base_fare: number
+          min_fare: number
+          per_km: number
+          per_min: number
+          updated_at: string
+          vehicle: Database["public"]["Enums"]["vehicle_kind"]
+        }
+        Insert: {
+          base_fare: number
+          min_fare?: number
+          per_km: number
+          per_min?: number
+          updated_at?: string
+          vehicle: Database["public"]["Enums"]["vehicle_kind"]
+        }
+        Update: {
+          base_fare?: number
+          min_fare?: number
+          per_km?: number
+          per_min?: number
+          updated_at?: string
+          vehicle?: Database["public"]["Enums"]["vehicle_kind"]
+        }
+        Relationships: []
+      }
       pool_ratings: {
         Row: {
           comment: string | null
@@ -224,15 +283,23 @@ export type Database = {
           created_at: string
           departure_date: string
           departure_time: string
+          dest_lat: number | null
+          dest_lng: number | null
           destination: string
+          distance_km: number | null
           driver_first_name: string
           driver_id: string
           driver_rating: number
+          duration_min: number | null
           flexible_minutes: number
           id: string
           max_route_deviation: number
           notes: string | null
           price_per_seat: number
+          route_polyline: string | null
+          start_city: string | null
+          start_lat: number | null
+          start_lng: number | null
           start_location: string
           status: Database["public"]["Enums"]["pool_route_status"]
           total_seats: number
@@ -246,15 +313,23 @@ export type Database = {
           created_at?: string
           departure_date: string
           departure_time: string
+          dest_lat?: number | null
+          dest_lng?: number | null
           destination: string
+          distance_km?: number | null
           driver_first_name: string
           driver_id: string
           driver_rating?: number
+          duration_min?: number | null
           flexible_minutes?: number
           id?: string
           max_route_deviation?: number
           notes?: string | null
           price_per_seat: number
+          route_polyline?: string | null
+          start_city?: string | null
+          start_lat?: number | null
+          start_lng?: number | null
           start_location: string
           status?: Database["public"]["Enums"]["pool_route_status"]
           total_seats: number
@@ -268,15 +343,23 @@ export type Database = {
           created_at?: string
           departure_date?: string
           departure_time?: string
+          dest_lat?: number | null
+          dest_lng?: number | null
           destination?: string
+          distance_km?: number | null
           driver_first_name?: string
           driver_id?: string
           driver_rating?: number
+          duration_min?: number | null
           flexible_minutes?: number
           id?: string
           max_route_deviation?: number
           notes?: string | null
           price_per_seat?: number
+          route_polyline?: string | null
+          start_city?: string | null
+          start_lat?: number | null
+          start_lng?: number | null
           start_location?: string
           status?: Database["public"]["Enums"]["pool_route_status"]
           total_seats?: number
@@ -306,10 +389,14 @@ export type Database = {
         Row: {
           created_at: string
           deviation_km: number
+          dropoff_lat: number | null
+          dropoff_lng: number | null
           dropoff_location: string
           emergency_contact: string
           fare: number
           id: string
+          pickup_lat: number | null
+          pickup_lng: number | null
           pickup_location: string
           pool_route_id: string
           request_status: Database["public"]["Enums"]["pool_request_status"]
@@ -322,10 +409,14 @@ export type Database = {
         Insert: {
           created_at?: string
           deviation_km?: number
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
           dropoff_location: string
           emergency_contact: string
           fare?: number
           id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
           pickup_location: string
           pool_route_id: string
           request_status?: Database["public"]["Enums"]["pool_request_status"]
@@ -338,10 +429,14 @@ export type Database = {
         Update: {
           created_at?: string
           deviation_km?: number
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
           dropoff_location?: string
           emergency_contact?: string
           fare?: number
           id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
           pickup_location?: string
           pool_route_id?: string
           request_status?: Database["public"]["Enums"]["pool_request_status"]
@@ -367,6 +462,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          location_sharing: boolean
           phone: string | null
           suspended: boolean
         }
@@ -375,6 +471,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id: string
+          location_sharing?: boolean
           phone?: string | null
           suspended?: boolean
         }
@@ -383,6 +480,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          location_sharing?: boolean
           phone?: string | null
           suspended?: boolean
         }
@@ -430,20 +528,29 @@ export type Database = {
         Row: {
           booking_code: string
           created_at: string
+          dest_lat: number | null
+          dest_lng: number | null
+          dest_place_id: string | null
           destination: string
+          distance_km: number | null
           driver_id: string | null
           driver_name: string | null
           driver_phone: string | null
           driver_vehicle: string | null
+          duration_min: number | null
           emergency_contact: string
           fare: number
           id: string
           pickup: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          pickup_place_id: string | null
           ride_date: string
           ride_time: string
           rider_id: string
           rider_name: string
           rider_phone: string
+          route_polyline: string | null
           status: Database["public"]["Enums"]["ride_status"]
           trip_pin: string
           updated_at: string
@@ -452,20 +559,29 @@ export type Database = {
         Insert: {
           booking_code?: string
           created_at?: string
+          dest_lat?: number | null
+          dest_lng?: number | null
+          dest_place_id?: string | null
           destination: string
+          distance_km?: number | null
           driver_id?: string | null
           driver_name?: string | null
           driver_phone?: string | null
           driver_vehicle?: string | null
+          duration_min?: number | null
           emergency_contact: string
           fare: number
           id?: string
           pickup: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          pickup_place_id?: string | null
           ride_date: string
           ride_time: string
           rider_id: string
           rider_name: string
           rider_phone: string
+          route_polyline?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
           trip_pin?: string
           updated_at?: string
@@ -474,20 +590,29 @@ export type Database = {
         Update: {
           booking_code?: string
           created_at?: string
+          dest_lat?: number | null
+          dest_lng?: number | null
+          dest_place_id?: string | null
           destination?: string
+          distance_km?: number | null
           driver_id?: string | null
           driver_name?: string | null
           driver_phone?: string | null
           driver_vehicle?: string | null
+          duration_min?: number | null
           emergency_contact?: string
           fare?: number
           id?: string
           pickup?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          pickup_place_id?: string | null
           ride_date?: string
           ride_time?: string
           rider_id?: string
           rider_name?: string
           rider_phone?: string
+          route_polyline?: string | null
           status?: Database["public"]["Enums"]["ride_status"]
           trip_pin?: string
           updated_at?: string
@@ -595,6 +720,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_share_location: { Args: { _user: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -604,6 +730,18 @@ export type Database = {
       }
       is_pool_driver: {
         Args: { _route: string; _user: string }
+        Returns: boolean
+      }
+      nearby_drivers: {
+        Args: { _lat: number; _lng: number; _radius_km?: number }
+        Returns: {
+          lat: number
+          lng: number
+          vehicle: Database["public"]["Enums"]["vehicle_kind"]
+        }[]
+      }
+      rider_can_track: {
+        Args: { _driver: string; _rider: string }
         Returns: boolean
       }
     }
