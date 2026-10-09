@@ -163,8 +163,8 @@ function AuthPage() {
         <Logo variant="full" className="mb-6 justify-center" />
         <div className="rounded-3xl border bg-card p-6 shadow-card sm:p-8">
           {step === "otp" ? (
-            <OtpVerify target={target} onVerify={verify} onResend={() => sendCode(target)} onChange={() => setStep("form")}
-              changeLabel={target.startsWith("+") ? "Change phone" : "Change email"} />
+            <OtpVerify target={target} onVerify={verify} onResend={() => resend(otpKind, target)} onChange={() => setStep("form")}
+              changeLabel="Change email" />
           ) : step === "newpass" ? (
             <form onSubmit={savePassword} className="space-y-3">
               <h1 className="text-2xl font-semibold">Choose a new password</h1>
