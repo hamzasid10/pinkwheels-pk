@@ -357,11 +357,11 @@ export function AdminPoolSection() {
 /* ------------------------- Rate a completed trip ------------------------- */
 
 export function RateTrip({ kind, id }: { kind: "ride" | "pool"; id: string }) {
-  const table = kind === "ride" ? "ratings" : "pool_ratings";
-  const col = kind === "ride" ? "ride_id" : "pool_seat_id";
   const existing = useQuery({
     queryKey: ["rating", kind, id],
-    queryFn: async () => (await supabase.from(table).select("stars").eq(col, id).maybeSingle()).data,
+    queryFn: async () => kind === "ride"
+      ? (await supabase.from("ratings").select("stars").eq("ride_id", id).maybeSingle()).data
+      : (await supabase.from("pool_ratings").select("stars").eq("pool_seat_id", id).maybeSingle()).data,
   });
   const [stars, setStars] = useState(0);
   const [comment, setComment] = useState("");
