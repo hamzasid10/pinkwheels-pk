@@ -17,7 +17,7 @@ export function InfoPage({ title, updated, children }: { title: string; updated?
     <div className="min-h-screen bg-gradient-blush">
       <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <Link to="/" aria-label="Pink Wheel home"><Logo /></Link>
+          <Logo />
           <button type="button" onClick={() => history.length > 1 ? history.back() : (location.href = "/")} className="flex items-center gap-1 text-sm font-semibold text-primary">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
