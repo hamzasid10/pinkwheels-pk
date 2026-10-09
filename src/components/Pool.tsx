@@ -263,6 +263,7 @@ export function RiderPoolSection({ uid }: { uid: string }) {
                       <span><b>{s.pickup_location} → {s.dropoff_location}</b><br /><span className="text-muted-foreground">{s.pool_routes ? `${s.pool_routes.driver_first_name} · ${fmtDate(s.pool_routes.departure_date)} ${fmtTime(s.pool_routes.departure_time)}` : ""} · {pkr(s.fare)}</span></span>
                       <SeatStatusPill status={s.request_status} />
                     </Link>
+                    {s.request_status === "completed" && <RateTrip kind="pool" id={s.id} />}
                   </li>
                 ))}
               </ul>
@@ -349,6 +350,44 @@ export function AdminPoolSection() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ------------------------- Rate a completed trip ------------------------- */
+
+export function RateTrip({ kind, id }: { kind: "ride" | "pool"; id: string }) {
+  const table = kind === "ride" ? "ratings" : "pool_ratings";
+  const col = kind === "ride" ? "ride_id" : "pool_seat_id";
+  const existing = useQuery({
+    queryKey: ["rating", kind, id],
+    queryFn: async () => (await supabase.from(table).select("stars").eq(col, id).maybeSingle()).data,
+  });
+  const [stars, setStars] = useState(0);
+  const [comment, setComment] = useState("");
+  const [open, setOpen] = useState(false);
+  if (existing.data) return <span className="text-xs text-muted-foreground">You rated {existing.data.stars}★</span>;
+  if (!open) return <Button size="sm" variant="ghost" onClick={() => setOpen(true)}><Star className="h-4 w-4" /> Rate</Button>;
+  return (
+    <div className="mt-2 w-full space-y-2 rounded-xl bg-accent/60 p-3">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" aria-label={`${n} stars`} onClick={() => setStars(n)}>
+            <Star className={`h-6 w-6 ${n <= stars ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+          </button>
+        ))}
+      </div>
+      <Input maxLength={500} placeholder="Leave a short review (optional)" value={comment} onChange={(e) => setComment(e.target.value)} />
+      <Button size="sm" disabled={!stars} onClick={async () => {
+        const { data: u } = await supabase.auth.getUser();
+        const row = { stars, comment: comment.trim() || null, rater_id: u.user!.id };
+        const { error } = kind === "ride"
+          ? await supabase.from("ratings").insert({ ...row, ride_id: id })
+          : await supabase.from("pool_ratings").insert({ ...row, pool_seat_id: id });
+        if (error) return toast.error(error.message);
+        toast.success("Thanks for your review!");
+        existing.refetch();
+      }}>Submit</Button>
     </div>
   );
 }
