@@ -105,7 +105,7 @@ function GpsButton({ onPlace }: { onPlace: (p: Place) => void }) {
         onPlace({ ...p, address: r.address, placeId: r.placeId });
       } catch (e) { toast.error((e as Error).message); }
       setBusy(false);
-    }, (e) => { setBusy(false); toast.error(e.code === 1 ? "Location permission was denied." : "Couldn't get your location."); }, { enableHighAccuracy: true, timeout: 12000 });
+    }, (e) => { setBusy(false); toast.error(e.code === 1 ? "Location is off for Pink Wheel. Type your address instead, or allow location in your browser settings." : "Couldn't get your location."); }, { enableHighAccuracy: true, timeout: 12000 });
   }
   return (
     <button type="button" onClick={go} aria-label="Use my current location"
