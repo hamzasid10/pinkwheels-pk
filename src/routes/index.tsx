@@ -232,8 +232,8 @@ function Landing() {
           </div>
           <div className="text-sm">
             <p className="font-semibold">Contact</p>
-            <p className="mt-2 flex items-center gap-2 text-muted-foreground"><Mail className="h-4 w-4" /> hello@pinkwheel.app</p>
-            <p className="mt-1 flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /> +92 300 0000000</p>
+            <p className="mt-2 flex items-center gap-2 text-muted-foreground"><Mail className="h-4 w-4" /> Hamza.icaruss@gmail.com</p>
+            <p className="mt-1 flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /> +92 350 6289894</p>
           </div>
           <div className="text-sm">
             <p className="font-semibold">24/7 Safety line</p>
