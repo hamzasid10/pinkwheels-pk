@@ -10,11 +10,14 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { cn } from "@/lib/utils";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 import { COUNTRY_CODES, OtpVerify, otpErrorMessage, toE164 } from "@/components/OtpVerify";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>): { role?: "driver" } =>
-    s["role"] === "driver" ? { role: "driver" } : {},
+  validateSearch: (s: Record<string, unknown>): { role?: "driver"; next?: string } => {
+    const next = oauthReturnPath(s["next"]);
+    return { ...(s["role"] === "driver" ? { role: "driver" as const } : {}), ...(next !== "/" ? { next } : {}) };
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Pink Wheel" },
@@ -33,8 +36,9 @@ type Method = "email" | "phone";
 const emailSchema = z.string().trim().email("Enter a valid email address").max(255);
 
 function AuthPage() {
-  const { role: initialRole } = Route.useSearch();
+  const { role: initialRole, next } = Route.useSearch();
   const navigate = useNavigate();
+  const goNext = () => (next ? window.location.assign(next) : navigate({ to: "/dashboard" }));
   const [mode, setMode] = useState<Mode>(initialRole ? "signup" : "signin");
   const [method, setMethod] = useState<Method>("email");
   const [role, setRole] = useState<"rider" | "driver">(initialRole ?? "rider");
@@ -51,7 +55,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session && step === "form") navigate({ to: "/dashboard" });
+      if (data.session && step === "form") goNext();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
@@ -66,7 +70,7 @@ function AuthPage() {
     const options = { shouldCreateUser: create, ...(create ? { data: { full_name: name.trim(), role } } : {}) };
     const { error } = dest.startsWith("+")
       ? await supabase.auth.signInWithOtp({ phone: dest, options })
-      : await supabase.auth.signInWithOtp({ email: dest, options: { ...options, emailRedirectTo: `${window.location.origin}/dashboard` } });
+      : await supabase.auth.signInWithOtp({ email: dest, options: { ...options, emailRedirectTo: next ? new URL(next, window.location.origin).href : `${window.location.origin}/dashboard` } });
     if (error) throw error;
   }
 
@@ -79,7 +83,7 @@ function AuthPage() {
       if (mode === "password") {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
-        return navigate({ to: "/dashboard" });
+        return goNext();
       }
       if (mode === "signup" && name.trim().length < 2) throw new Error("Enter your name");
       let dest: string;
@@ -111,7 +115,7 @@ function AuthPage() {
     if (error) throw error;
     if (mode === "forgot") return setStep("newpass");
     toast.success("Verified!");
-    navigate({ to: "/dashboard" });
+    goNext();
   }
 
   async function savePassword(e: React.FormEvent) {
@@ -126,10 +130,10 @@ function AuthPage() {
   }
 
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
+    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" + (next ? `?next=${encodeURIComponent(next)}` : "") });
     if (r.error) return toast.error("Google sign-in failed");
     if (r.redirected) return;
-    navigate({ to: "/dashboard" });
+    goNext();
   }
 
   const title = { signin: "Welcome back", signup: "Join Pink Wheel", password: "Sign in with password", forgot: "Reset password" }[mode];
