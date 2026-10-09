@@ -62,7 +62,11 @@ function PoolList() {
   const list = (routes.data ?? [])
     .filter((r) => r.driver_id !== me.data?.user.id)
     .filter((r) => {
-      if (from && to) return r.route_polyline ? geo(r)!.ok : near(from.address.split(",")[0] ?? "", r.start_location) || near(to.address.split(",")[0] ?? "", r.destination);
+      if (from && to) {
+        if (r.route_polyline) return geo(r)!.ok;
+        const a: string = from.address.split(",")[0] ?? "", b: string = to.address.split(",")[0] ?? "";
+        return near(a, r.start_location) || near(b, r.destination);
+      }
       return true;
     })
     .filter((r) => !q.date || r.departure_date === q.date)
