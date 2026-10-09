@@ -49,6 +49,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           <Button
             variant="ghost"
             size="sm"
+            aria-label="Sign out"
             onClick={async () => {
               await supabase.auth.signOut();
               qc.clear();
