@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { DriverPoolSection } from "@/components/Pool";
 import { pkr, useMe, type RideStatus } from "@/lib/pink";
 
 export const Route = createFileRoute("/_authenticated/driver")({
@@ -123,6 +124,8 @@ function DriverDashboard() {
             </div>
           )}
         </Panel>
+
+        <DriverPoolSection uid={uid!} approved={d.status === "approved"} />
 
         <Panel title="Documents status" icon={<FileCheck className="h-4 w-4" />}>
           <ul className="space-y-2 text-sm">

@@ -1,3 +1,4 @@
+import { RiderPoolSection } from "@/components/Pool";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -101,6 +102,8 @@ function RiderDashboard() {
             </div>
           )}
         </Panel>
+
+        {me.data?.user.id && <RiderPoolSection uid={me.data.user.id} />}
 
         <Panel title="Ride history" icon={<History className="h-4 w-4" />}>
           {history.length === 0 ? <p className="text-sm text-muted-foreground">No past rides yet.</p> : (
