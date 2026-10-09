@@ -36,6 +36,13 @@
       "when": 1791564797267,
       "tag": "0004_restrict_app_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791565033674,
+      "tag": "0005_migration",
+      "breakpoints": true
     }
   ]
 }

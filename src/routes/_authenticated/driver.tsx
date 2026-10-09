@@ -140,7 +140,7 @@ function DriverDashboard() {
 
         <Panel title="Help & support" icon={<Headphones className="h-4 w-4" />}>
           <p className="text-sm text-muted-foreground">Our 24/7 driver support team is here for you.</p>
-          <Button variant="outline" className="mt-3" asChild><a href="mailto:drivers@pinkwheel.app">Contact support</a></Button>
+          <Button variant="outline" className="mt-3" asChild><a href="mailto:Hamza.icaruss@gmail.com">Contact support</a></Button>
         </Panel>
       </div>
     </AppShell>
