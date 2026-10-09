@@ -73,6 +73,9 @@ export function PlaceInput({
       />
       {loading && <Loader2 className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />}
       {allowGps && <GpsButton onPlace={(p) => { dirty.current = false; onChange(p); }} />}
+      {!value && text.trim().length > 1 && !open && !loading && (
+        <p className="mt-1 text-xs text-destructive">Choose an address from the list so we can find it on the map.</p>
+      )}
       {open && sugs.length > 0 && (
         <ul className="absolute z-30 mt-1 w-full overflow-hidden rounded-2xl border border-border bg-card shadow-card">
           {sugs.map((s) => (
