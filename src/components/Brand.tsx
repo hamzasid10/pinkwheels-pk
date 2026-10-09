@@ -9,6 +9,7 @@ import { STATUS_FLOW, STATUS_LABEL, type RideStatus } from "@/lib/pink";
 import { cn } from "@/lib/utils";
 import fullLogo from "@/assets/pink-wheel-full.png.asset.json";
 import brandIcon from "@/assets/pink-wheel-icon.png";
+import { MobileMenu } from "@/components/MobileMenu";
 
 export function Logo({ className, variant = "compact" }: { className?: string; variant?: "compact" | "full" }) {
   return (
@@ -43,7 +44,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
     <div className="min-h-screen bg-gradient-blush">
       <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Logo />
+          <div className="flex min-w-0 items-center gap-1"><MobileMenu className="-ml-2" /><Logo /></div>
           <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/account" })}>Account</Button>
           <Button
