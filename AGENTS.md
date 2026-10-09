@@ -13,3 +13,4 @@
 - Ride fares are computed from the admin-editable fare_settings table and re-computed by a DB trigger on insert — never trust client fares or hardcode prices.
 - Driver live location lives in driver_locations (RLS: own write while online+consented, assigned rider/admin read); public nearby view only via the nearby_drivers() RPC returning rounded coords.
 - Use the shared Logo variants for application branding and BrandSplash for route loading; keep home-screen support manifest-only without offline caching so previews remain reliable.
+- MCP server lives in src/lib/mcp (one tool per file, OAuth via the backend's auth issuer, queries run with the caller's token so RLS applies) — external assistants act strictly as the signed-in user.
