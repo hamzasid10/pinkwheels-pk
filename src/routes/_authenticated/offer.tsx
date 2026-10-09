@@ -65,7 +65,7 @@ function OfferPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const p = schema.safeParse({ ...f, notes: f.notes || undefined });
-    if (!p.success) return toast.error(p.error.issues[0].message);
+    if (!p.success) return toast.error(p.error.issues[0]?.message ?? "Check the form");
     if (!vehicle) return toast.error("Add a vehicle to your profile first");
     if (f.departure_date < today) return toast.error("Date can't be in the past");
     setBusy(true);

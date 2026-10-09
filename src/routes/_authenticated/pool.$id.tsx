@@ -57,10 +57,10 @@ function RouteView() {
     e.preventDefault();
     if (me.data?.profile?.suspended) return toast.error("Your account is suspended.");
     const p = schema.safeParse(f);
-    if (!p.success) return toast.error(p.error.issues[0].message);
+    if (!p.success) return toast.error(p.error.issues[0]?.message ?? "Check the form");
     if (p.data.seats_requested > r!.available_seats) return toast.error("Not enough seats available");
     setBusy(true);
-    const first = (me.data?.profile?.full_name || me.data?.user.email || "Rider").split(/[\s@]/)[0];
+    const first = (me.data?.profile?.full_name || me.data?.user.email || "Rider").split(/[\s@]/)[0] ?? "Rider";
     const { error } = await supabase.from("pool_seat_requests").insert({ ...p.data, pool_route_id: r!.id, rider_id: uid!, rider_first_name: first, deviation_km: dev });
     setBusy(false);
     if (error) return toast.error(error.message);

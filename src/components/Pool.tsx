@@ -46,7 +46,7 @@ export function SeatStatusPill({ status }: { status: PoolSeatStatus }) {
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone}`}>{SEAT_STATUS_LABEL[status]}</span>;
 }
 
-export function RouteCard({ r, pickupKm }: { r: PoolRoute; pickupKm?: number }) {
+export function RouteCard({ r, pickupKm }: { r: PoolRoute; pickupKm?: number | undefined }) {
   const full = r.available_seats === 0 || r.status === "full";
   return (
     <div className="rounded-3xl border bg-card p-5 shadow-soft">

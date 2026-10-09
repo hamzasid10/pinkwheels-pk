@@ -59,11 +59,11 @@ export function fmtDate(d: string) {
 }
 
 export function fmtTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
+  const [h = 0, m = 0] = t.split(":").map(Number);
   return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
 
 export function minutesBetween(a: string, b: string) {
-  const f = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const f = (t: string) => { const [h = 0, m = 0] = t.split(":").map(Number); return h * 60 + m; };
   return Math.abs(f(a) - f(b));
 }
