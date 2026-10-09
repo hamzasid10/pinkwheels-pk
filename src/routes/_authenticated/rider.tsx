@@ -1,4 +1,4 @@
-import { RiderPoolSection } from "@/components/Pool";
+import { RateTrip, RiderPoolSection } from "@/components/Pool";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -111,7 +111,7 @@ function RiderDashboard() {
               {history.map((r) => (
                 <li key={r.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                   <div className="min-w-0"><p className="truncate font-medium">{r.pickup} → {r.destination}</p><p className="text-xs text-muted-foreground">{r.ride_date} · {pkr(r.fare)}</p></div>
-                  <StatusPill status={r.status as RideStatus} />
+                  <div className="flex shrink-0 items-center gap-1">{r.status === "completed" && <RateTrip kind="ride" id={r.id} />}<StatusPill status={r.status as RideStatus} /></div>
                 </li>
               ))}
             </ul>

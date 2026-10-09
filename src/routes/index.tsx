@@ -121,6 +121,25 @@ function Landing() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-6xl px-5 py-14">
+        <h2 className="text-3xl font-semibold sm:text-4xl">Going Your Way? Share the Ride.</h2>
+        <p className="mt-2 max-w-2xl text-muted-foreground">Offer your empty seat or find a verified woman already travelling in your direction. Save money, share the journey, and travel safely with Pink Wheel.</p>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {[
+            { to: "/book" as const, icon: Car, t: "Book a Ride", d: "A private Pink Wheel ride with a verified female driver." },
+            { to: "/pool" as const, icon: Users, t: "Pink Pool", d: "Find cheaper shared rides already offered by women drivers." },
+            { to: "/offer" as const, icon: MapPin, t: "Offer My Route", d: "Driving somewhere anyway? Post your journey and share empty seats." },
+          ].map((c) => (
+            <Link key={c.t} to={c.to} className="group rounded-3xl border bg-card p-6 shadow-soft transition hover:-translate-y-0.5 hover:shadow-card">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-rose text-primary-foreground"><c.icon className="h-6 w-6" /></div>
+              <p className="mt-4 font-display text-2xl font-semibold">{c.t}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{c.d}</p>
+              <p className="mt-4 text-sm font-semibold text-primary">Get started →</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <Section id="how" eyebrow="How it works" title="Three simple steps to a safer ride">
         <div className="grid gap-4 sm:grid-cols-3">
           {steps.map((s, i) => (
