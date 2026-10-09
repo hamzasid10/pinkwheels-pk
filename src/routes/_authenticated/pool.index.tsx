@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/lib/pink";
-import { deviationKm, minutesBetween } from "@/lib/pool";
+import { minutesBetween } from "@/lib/pool";
 import { PlaceInput, type Place } from "@/components/maps/PlaceInput";
 import { decodePolyline, distanceToPath, pathIndex } from "@/lib/maps/cities";
 
@@ -105,7 +105,7 @@ function PoolList() {
                 return (
                   <div key={m.route_id} className="space-y-2">
                     <div className="flex items-start gap-2 rounded-2xl bg-accent px-3 py-2 text-xs"><span className="rounded-full bg-primary px-2 py-0.5 font-semibold text-primary-foreground">{m.score}% match</span><span>{m.reason}</span></div>
-                    <RouteCard r={r} pickupKm={deviationKm(r.start_location, r.destination, ai.pickup, ai.dropoff)} />
+                    <RouteCard r={r} pickupKm={geo(r)?.pickupKm} />
                   </div>
                 );
               })}
