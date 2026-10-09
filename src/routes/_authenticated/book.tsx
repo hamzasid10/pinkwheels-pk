@@ -95,6 +95,19 @@ function BookPage() {
 
   const fareFor = (v: Vehicle) => info ? routeFare(fares.data?.find((x) => x.vehicle === v), info.distanceKm, info.durationMin) : null;
   const fare = fareFor(vehicle);
+  const vLabel = VEHICLES.find((v) => v.id === vehicle)?.label ?? "this vehicle";
+  const missing: string[] = [];
+  if (!pickup) missing.push("Pickup — pick an address from the suggestions or tap the location button");
+  if (!drop) missing.push("Drop-off — pick an address from the suggestions");
+  if (pickup && drop && !routing && !info) missing.push("Route — we couldn't find a driving route; try moving a pin");
+  if (pickup && !inServiceArea(pickup)) missing.push("Pickup must be in Lahore, Gujranwala, Islamabad or Rawalpindi");
+  if (drop && !inServiceArea(drop)) missing.push("Drop-off must be in Lahore, Gujranwala, Islamabad or Rawalpindi");
+  if (info && !fares.isLoading && fare == null) missing.push(`Fare — prices for ${vLabel} haven't been set by Pink Wheel yet`);
+  if (!f.ride_date || !f.ride_time) missing.push("Date and time");
+  if (name.trim().length < 2) missing.push("Rider name");
+  if (phone.trim().length < 7) missing.push("Phone number");
+  if (f.emergency_contact.trim().length < 7) missing.push("Emergency contact (name & phone)");
+  const ready = missing.length === 0 && !routing && !!info && fare != null && !!me.data;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,7 +117,7 @@ function BookPage() {
     if (fare == null) return toast.error("Fares for this vehicle are not set yet.");
     const parsed = schema.safeParse({ ...f, rider_name: name, rider_phone: phone });
     if (!parsed.success) return toast.error(parsed.error.issues[0]?.message);
-    if (!me.data) return;
+    if (!me.data || busy) return;
     setBusy(true);
     const { data, error } = await supabase
       .from("ride_requests")
@@ -118,7 +131,7 @@ function BookPage() {
       .select("id, booking_code, pickup, destination, vehicle, fare, status, trip_pin, route_polyline, pickup_lat, pickup_lng, dest_lat, dest_lng")
       .single();
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(error.message.includes("Fares") ? "Fares for this vehicle aren't set yet." : "Couldn't book your ride. Please try again.");
     setBooked(data as Booked);
   }
 
@@ -203,9 +216,15 @@ function BookPage() {
               <div><Label>Emergency contact (name & phone)</Label><Input value={f.emergency_contact} onChange={set("emergency_contact")} placeholder="e.g. Ammi — 0300 1234567" /></div>
             </div>
           </Panel>
-          <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy || !info || fare == null}>
+          <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy || !ready}>
             {busy ? "Booking…" : fare != null ? `Book ${VEHICLES.find((v) => v.id === vehicle)?.label} · ${pkr(fare)}` : "Book Ride"}
           </Button>
+          {!ready && !busy && (
+            <div role="status" className="rounded-2xl border border-dashed border-primary/40 bg-accent/50 px-4 py-3 text-sm">
+              <p className="font-semibold">{routing ? "Finding the best route…" : "Still needed before you can book:"}</p>
+              {!routing && <ul className="mt-1 list-disc space-y-0.5 pl-5 text-muted-foreground">{missing.map((m) => <li key={m}>{m}</li>)}</ul>}
+            </div>
+          )}
         </div>
       </form>
     </AppShell>
