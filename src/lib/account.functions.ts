@@ -37,7 +37,10 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       working_hours: null, status: "suspended", online: false,
     }).eq("user_id", uid);
 
-    // Finally remove the sign-in account (profile and roles are removed with it)
+    await db.from("user_roles").delete().eq("user_id", uid);
+    await db.from("profiles").delete().eq("id", uid);
+
+    // Finally remove the sign-in account 
     const { error } = await db.auth.admin.deleteUser(uid);
     if (error) throw new Error("We couldn't delete your account. Please contact support.");
     return { ok: true };
