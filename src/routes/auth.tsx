@@ -188,23 +188,12 @@ function AuthPage() {
                 </div>
               )}
 
-              {(mode === "signin" || mode === "signup") && (
-                <div className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1 text-sm font-semibold">
-                  {(["email", "phone"] as const).map((m) => (
-                    <button key={m} type="button" onClick={() => setMethod(m)}
-                      className={cn("flex items-center justify-center gap-1.5 rounded-full py-2 transition", method === m ? "bg-card shadow-soft" : "text-muted-foreground")}>
-                      {m === "email" ? <Mail className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
-                      {m === "email" ? "Email" : "Phone"}
-                    </button>
-                  ))}
-                </div>
-              )}
-
               <form onSubmit={submit} className="mt-5 space-y-3">
                 {mode === "signup" && (
                   <div><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} required /></div>
                 )}
-                {usePhone ? (
+                <div><Label>Email</Label><Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+                {mode === "signup" && (
                   <div>
                     <Label>Phone number</Label>
                     <div className="flex gap-2">
@@ -215,27 +204,25 @@ function AuthPage() {
                       <Input type="tel" inputMode="tel" placeholder="300 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} required />
                     </div>
                   </div>
-                ) : (
-                  <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
                 )}
-                {mode === "password" && (
-                  <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+                {(mode === "password" || mode === "signup") && (
+                  <div><Label>Password</Label><Input type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={mode === "signup" ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
                 )}
                 <Button type="submit" variant="hero" className="w-full" disabled={busy}>
-                  {busy ? "Please wait…" : mode === "password" ? "Sign in" : mode === "forgot" ? "Send reset code" : "Send code"}
+                  {busy ? "Please wait…" : mode === "password" ? "Sign in" : mode === "signup" ? "Create account" : mode === "forgot" ? "Send reset code" : "Send code"}
                 </Button>
               </form>
 
-              <div className="mt-3 flex justify-between text-xs">
-                {mode !== "password" ? (
-                  <button type="button" className="font-semibold text-primary" onClick={() => { setMode("password"); setMethod("email"); }}>Use password instead</button>
-                ) : (
-                  <button type="button" className="font-semibold text-primary" onClick={() => setMode("signin")}>Use a code instead</button>
-                )}
-                {(mode === "password" || mode === "signin") && (
+              {mode !== "signup" && (
+                <div className="mt-3 flex justify-between text-xs">
+                  {mode !== "password" ? (
+                    <button type="button" className="font-semibold text-primary" onClick={() => setMode("password")}>Use password instead</button>
+                  ) : (
+                    <button type="button" className="font-semibold text-primary" onClick={() => setMode("signin")}>Email me a code instead</button>
+                  )}
                   <button type="button" className="font-semibold text-primary" onClick={() => setMode("forgot")}>Forgot password?</button>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div>
               <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
