@@ -56,6 +56,29 @@ function DriverDashboard() {
     rides.refetch();
   }
 
+  if (d.status !== "approved") {
+    const msg: Record<string, [string, string]> = {
+      incomplete: ["Incomplete application", "Finish your application to submit it for review."],
+      pending: ["Application submitted — under review", "Our team is checking your documents. You can't go online or receive rides until you're approved."],
+      info_requested: ["More information required", d.admin_note ?? "Please update your application."],
+      rejected: ["Application not approved", `Reason: ${d.admin_note ?? "not given"}. You can update and resubmit.`],
+      suspended: ["Account suspended", d.admin_note ?? "Contact support for help."],
+    };
+    const [t, body] = msg[d.status] ?? ["Status", d.status];
+    return (
+      <AppShell title="Driver application">
+        <Panel className="mx-auto max-w-lg text-center">
+          <FileCheck className="mx-auto h-12 w-12 text-primary" />
+          <p className="mt-4 text-lg font-semibold">{t}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+          {["incomplete", "info_requested", "rejected"].includes(d.status) && (
+            <Button className="mt-5" variant="hero" asChild><Link to="/driver-register">{d.status === "incomplete" ? "Continue application" : "Update & resubmit"}</Link></Button>
+          )}
+        </Panel>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell title={`Hello, ${d.full_name.split(" ")[0]}`}>
       {d.status !== "approved" && (
