@@ -32,15 +32,14 @@ export const Route = createFileRoute("/auth")({
 });
 
 type Mode = "signin" | "signup" | "password" | "forgot";
-type Method = "email" | "phone";
+type OtpKind = "signup" | "email" | "recovery";
 const emailSchema = z.string().trim().email("Enter a valid email address").max(255);
 
 function AuthPage() {
   const { role: initialRole, next } = Route.useSearch();
   const navigate = useNavigate();
   const goNext = () => (next ? window.location.assign(next) : navigate({ to: "/dashboard" }));
-  const [mode, setMode] = useState<Mode>(initialRole ? "signup" : "signin");
-  const [method, setMethod] = useState<Method>("email");
+  const [mode, setMode] = useState<Mode>(initialRole ? "signup" : "password");
   const [role, setRole] = useState<"rider" | "driver">(initialRole ?? "rider");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -50,6 +49,7 @@ function AuthPage() {
   const [newPass, setNewPass] = useState("");
   const [step, setStep] = useState<"form" | "otp" | "newpass">("form");
   const [target, setTarget] = useState("");
+  const [otpKind, setOtpKind] = useState<OtpKind>("email");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
 
@@ -60,18 +60,25 @@ function AuthPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  async function sendCode(dest: string) {
-    if (mode === "forgot") {
+  const redirectTo = () => (next ? new URL(next, window.location.origin).href : `${window.location.origin}/dashboard`);
+
+  async function resend(kind: OtpKind, dest: string) {
+    if (kind === "recovery") {
       const { error } = await supabase.auth.resetPasswordForEmail(dest, { redirectTo: `${window.location.origin}/reset-password` });
       if (error) throw error;
-      return;
+    } else if (kind === "signup") {
+      const { error } = await supabase.auth.resend({ type: "signup", email: dest, options: { emailRedirectTo: redirectTo() } });
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.auth.signInWithOtp({ email: dest, options: { shouldCreateUser: false, emailRedirectTo: redirectTo() } });
+      if (error) throw error;
     }
-    const create = mode === "signup";
-    const options = { shouldCreateUser: create, ...(create ? { data: { full_name: name.trim(), role } } : {}) };
-    const { error } = dest.startsWith("+")
-      ? await supabase.auth.signInWithOtp({ phone: dest, options })
-      : await supabase.auth.signInWithOtp({ email: dest, options: { ...options, emailRedirectTo: next ? new URL(next, window.location.origin).href : `${window.location.origin}/dashboard` } });
-    if (error) throw error;
+  }
+
+  function toOtp(kind: OtpKind, dest: string) {
+    setOtpKind(kind);
+    setTarget(dest);
+    setStep("otp");
   }
 
   async function submit(e: React.FormEvent) {
@@ -80,25 +87,40 @@ function AuthPage() {
     lock.current = true;
     setBusy(true);
     try {
+      const r = emailSchema.safeParse(email);
+      if (!r.success) throw new Error(r.error.issues[0]?.message);
+      const dest = r.data.toLowerCase();
       if (mode === "password") {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (error) throw error;
+        const { error } = await supabase.auth.signInWithPassword({ email: dest, password });
+        if (error) {
+          if (error.message.toLowerCase().includes("not confirmed")) {
+            await resend("signup", dest);
+            toast.info("Please verify your email first — we sent you a new code.");
+            return toOtp("signup", dest);
+          }
+          throw new Error(error.message.toLowerCase().includes("invalid") ? "Wrong email or password." : error.message);
+        }
         return goNext();
       }
-      if (mode === "signup" && name.trim().length < 2) throw new Error("Enter your name");
-      let dest: string;
-      if (method === "phone" && mode !== "forgot") {
+      if (mode === "signup") {
+        if (name.trim().length < 2) throw new Error("Enter your full name");
         const p = toE164(cc, phone);
         if (!p) throw new Error("Enter a valid phone number, e.g. 300 1234567");
-        dest = p;
-      } else {
-        const r = emailSchema.safeParse(email);
-        if (!r.success) throw new Error(r.error.issues[0]?.message);
-        dest = r.data;
+        if (password.length < 8) throw new Error("Password must be at least 8 characters");
+        const { data, error } = await supabase.auth.signUp({
+          email: dest, password,
+          options: { emailRedirectTo: redirectTo(), data: { full_name: name.trim(), role, phone: p } },
+        });
+        if (error) throw error;
+        if (data.user && data.user.identities?.length === 0) throw new Error("An account with this email already exists. Please sign in.");
+        return toOtp("signup", dest);
       }
-      await sendCode(dest);
-      setTarget(dest);
-      setStep("otp");
+      if (mode === "forgot") {
+        await resend("recovery", dest);
+        return toOtp("recovery", dest);
+      }
+      await resend("email", dest);
+      toOtp("email", dest);
     } catch (err) {
       toast.error(otpErrorMessage(err));
     } finally {
@@ -108,13 +130,10 @@ function AuthPage() {
   }
 
   async function verify(code: string) {
-    const type = mode === "forgot" ? "recovery" : target.startsWith("+") ? "sms" : "email";
-    const { error } = target.startsWith("+")
-      ? await supabase.auth.verifyOtp({ phone: target, token: code, type: "sms" })
-      : await supabase.auth.verifyOtp({ email: target, token: code, type: type as "email" | "recovery" });
+    const { error } = await supabase.auth.verifyOtp({ email: target, token: code, type: otpKind });
     if (error) throw error;
-    if (mode === "forgot") return setStep("newpass");
-    toast.success("Verified!");
+    if (otpKind === "recovery") return setStep("newpass");
+    toast.success("Email verified!");
     goNext();
   }
 
@@ -136,8 +155,7 @@ function AuthPage() {
     goNext();
   }
 
-  const title = { signin: "Welcome back", signup: "Join Pink Wheel", password: "Sign in with password", forgot: "Reset password" }[mode];
-  const usePhone = method === "phone" && (mode === "signin" || mode === "signup");
+  const title = { signin: "Sign in with a code", signup: "Join Pink Wheel", password: "Welcome back", forgot: "Reset password" }[mode];
 
   return (
     <div className="grid min-h-screen place-items-center bg-gradient-blush px-4 py-10">
