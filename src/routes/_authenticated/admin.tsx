@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell, Panel, StatusPill } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
+import { AdminPoolSection } from "@/components/Pool";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { pkr, STATUS_LABEL, useMe, type RideStatus } from "@/lib/pink";
@@ -76,6 +77,7 @@ function AdminPage() {
       <Tabs defaultValue="rides">
         <TabsList className="mb-4 flex h-auto flex-wrap justify-start rounded-2xl">
           <TabsTrigger value="rides">Ride bookings</TabsTrigger>
+          <TabsTrigger value="pool">Pink Pool</TabsTrigger>
           <TabsTrigger value="drivers">Driver verification</TabsTrigger>
           <TabsTrigger value="riders">Riders</TabsTrigger>
           <TabsTrigger value="complaints">Complaints</TabsTrigger>
@@ -114,6 +116,8 @@ function AdminPage() {
             </Panel>
           ))}
         </TabsContent>
+
+        <TabsContent value="pool"><AdminPoolSection /></TabsContent>
 
         <TabsContent value="drivers" className="space-y-3">
           {d.drivers.length === 0 && <Panel>No driver applications yet.</Panel>}
