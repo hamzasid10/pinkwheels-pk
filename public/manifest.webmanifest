@@ -7,7 +7,7 @@
   "scope": "/",
   "display": "standalone",
   "icons": [
-    { "src": "/__l5e/assets-v1/a0612e4b-8755-455b-995f-f716bcd06dea/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/__l5e/assets-v1/38ff3c73-5d0c-4d93-8ff7-f7d9b944bf5b/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/__l5e/assets-v1/529fa65d-bc72-40e4-9a9a-6235e22ec1ac/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/__l5e/assets-v1/1ae8e43d-4fb8-4243-b860-4b58d73d50af/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
