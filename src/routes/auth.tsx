@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Car, Mail, Phone, User } from "lucide-react";
+import { Car, User } from "lucide-react";
 import { Logo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,15 +32,14 @@ export const Route = createFileRoute("/auth")({
 });
 
 type Mode = "signin" | "signup" | "password" | "forgot";
-type Method = "email" | "phone";
+type OtpKind = "signup" | "email" | "recovery";
 const emailSchema = z.string().trim().email("Enter a valid email address").max(255);
 
 function AuthPage() {
   const { role: initialRole, next } = Route.useSearch();
   const navigate = useNavigate();
   const goNext = () => (next ? window.location.assign(next) : navigate({ to: "/dashboard" }));
-  const [mode, setMode] = useState<Mode>(initialRole ? "signup" : "signin");
-  const [method, setMethod] = useState<Method>("email");
+  const [mode, setMode] = useState<Mode>(initialRole ? "signup" : "password");
   const [role, setRole] = useState<"rider" | "driver">(initialRole ?? "rider");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -50,6 +49,7 @@ function AuthPage() {
   const [newPass, setNewPass] = useState("");
   const [step, setStep] = useState<"form" | "otp" | "newpass">("form");
   const [target, setTarget] = useState("");
+  const [otpKind, setOtpKind] = useState<OtpKind>("email");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
 
@@ -60,18 +60,25 @@ function AuthPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  async function sendCode(dest: string) {
-    if (mode === "forgot") {
+  const redirectTo = () => (next ? new URL(next, window.location.origin).href : `${window.location.origin}/dashboard`);
+
+  async function resend(kind: OtpKind, dest: string) {
+    if (kind === "recovery") {
       const { error } = await supabase.auth.resetPasswordForEmail(dest, { redirectTo: `${window.location.origin}/reset-password` });
       if (error) throw error;
-      return;
+    } else if (kind === "signup") {
+      const { error } = await supabase.auth.resend({ type: "signup", email: dest, options: { emailRedirectTo: redirectTo() } });
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.auth.signInWithOtp({ email: dest, options: { shouldCreateUser: false, emailRedirectTo: redirectTo() } });
+      if (error) throw error;
     }
-    const create = mode === "signup";
-    const options = { shouldCreateUser: create, ...(create ? { data: { full_name: name.trim(), role } } : {}) };
-    const { error } = dest.startsWith("+")
-      ? await supabase.auth.signInWithOtp({ phone: dest, options })
-      : await supabase.auth.signInWithOtp({ email: dest, options: { ...options, emailRedirectTo: next ? new URL(next, window.location.origin).href : `${window.location.origin}/dashboard` } });
-    if (error) throw error;
+  }
+
+  function toOtp(kind: OtpKind, dest: string) {
+    setOtpKind(kind);
+    setTarget(dest);
+    setStep("otp");
   }
 
   async function submit(e: React.FormEvent) {
@@ -80,25 +87,40 @@ function AuthPage() {
     lock.current = true;
     setBusy(true);
     try {
+      const r = emailSchema.safeParse(email);
+      if (!r.success) throw new Error(r.error.issues[0]?.message);
+      const dest = r.data.toLowerCase();
       if (mode === "password") {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (error) throw error;
+        const { error } = await supabase.auth.signInWithPassword({ email: dest, password });
+        if (error) {
+          if (error.message.toLowerCase().includes("not confirmed")) {
+            await resend("signup", dest);
+            toast.info("Please verify your email first — we sent you a new code.");
+            return toOtp("signup", dest);
+          }
+          throw new Error(error.message.toLowerCase().includes("invalid") ? "Wrong email or password." : error.message);
+        }
         return goNext();
       }
-      if (mode === "signup" && name.trim().length < 2) throw new Error("Enter your name");
-      let dest: string;
-      if (method === "phone" && mode !== "forgot") {
+      if (mode === "signup") {
+        if (name.trim().length < 2) throw new Error("Enter your full name");
         const p = toE164(cc, phone);
         if (!p) throw new Error("Enter a valid phone number, e.g. 300 1234567");
-        dest = p;
-      } else {
-        const r = emailSchema.safeParse(email);
-        if (!r.success) throw new Error(r.error.issues[0]?.message);
-        dest = r.data;
+        if (password.length < 8) throw new Error("Password must be at least 8 characters");
+        const { data, error } = await supabase.auth.signUp({
+          email: dest, password,
+          options: { emailRedirectTo: redirectTo(), data: { full_name: name.trim(), role, phone: p } },
+        });
+        if (error) throw error;
+        if (data.user && data.user.identities?.length === 0) throw new Error("An account with this email already exists. Please sign in.");
+        return toOtp("signup", dest);
       }
-      await sendCode(dest);
-      setTarget(dest);
-      setStep("otp");
+      if (mode === "forgot") {
+        await resend("recovery", dest);
+        return toOtp("recovery", dest);
+      }
+      await resend("email", dest);
+      toOtp("email", dest);
     } catch (err) {
       toast.error(otpErrorMessage(err));
     } finally {
@@ -108,13 +130,10 @@ function AuthPage() {
   }
 
   async function verify(code: string) {
-    const type = mode === "forgot" ? "recovery" : target.startsWith("+") ? "sms" : "email";
-    const { error } = target.startsWith("+")
-      ? await supabase.auth.verifyOtp({ phone: target, token: code, type: "sms" })
-      : await supabase.auth.verifyOtp({ email: target, token: code, type: type as "email" | "recovery" });
+    const { error } = await supabase.auth.verifyOtp({ email: target, token: code, type: otpKind });
     if (error) throw error;
-    if (mode === "forgot") return setStep("newpass");
-    toast.success("Verified!");
+    if (otpKind === "recovery") return setStep("newpass");
+    toast.success("Email verified!");
     goNext();
   }
 
@@ -136,8 +155,7 @@ function AuthPage() {
     goNext();
   }
 
-  const title = { signin: "Welcome back", signup: "Join Pink Wheel", password: "Sign in with password", forgot: "Reset password" }[mode];
-  const usePhone = method === "phone" && (mode === "signin" || mode === "signup");
+  const title = { signin: "Sign in with a code", signup: "Join Pink Wheel", password: "Welcome back", forgot: "Reset password" }[mode];
 
   return (
     <div className="grid min-h-screen place-items-center bg-gradient-blush px-4 py-10">
@@ -145,8 +163,8 @@ function AuthPage() {
         <Logo variant="full" className="mb-6 justify-center" />
         <div className="rounded-3xl border bg-card p-6 shadow-card sm:p-8">
           {step === "otp" ? (
-            <OtpVerify target={target} onVerify={verify} onResend={() => sendCode(target)} onChange={() => setStep("form")}
-              changeLabel={target.startsWith("+") ? "Change phone" : "Change email"} />
+            <OtpVerify target={target} onVerify={verify} onResend={() => resend(otpKind, target)} onChange={() => setStep("form")}
+              changeLabel="Change email" />
           ) : step === "newpass" ? (
             <form onSubmit={savePassword} className="space-y-3">
               <h1 className="text-2xl font-semibold">Choose a new password</h1>
@@ -170,23 +188,12 @@ function AuthPage() {
                 </div>
               )}
 
-              {(mode === "signin" || mode === "signup") && (
-                <div className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1 text-sm font-semibold">
-                  {(["email", "phone"] as const).map((m) => (
-                    <button key={m} type="button" onClick={() => setMethod(m)}
-                      className={cn("flex items-center justify-center gap-1.5 rounded-full py-2 transition", method === m ? "bg-card shadow-soft" : "text-muted-foreground")}>
-                      {m === "email" ? <Mail className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
-                      {m === "email" ? "Email" : "Phone"}
-                    </button>
-                  ))}
-                </div>
-              )}
-
               <form onSubmit={submit} className="mt-5 space-y-3">
                 {mode === "signup" && (
                   <div><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} required /></div>
                 )}
-                {usePhone ? (
+                <div><Label>Email</Label><Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+                {mode === "signup" && (
                   <div>
                     <Label>Phone number</Label>
                     <div className="flex gap-2">
@@ -197,27 +204,25 @@ function AuthPage() {
                       <Input type="tel" inputMode="tel" placeholder="300 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} required />
                     </div>
                   </div>
-                ) : (
-                  <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
                 )}
-                {mode === "password" && (
-                  <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+                {(mode === "password" || mode === "signup") && (
+                  <div><Label>Password</Label><Input type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={mode === "signup" ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
                 )}
                 <Button type="submit" variant="hero" className="w-full" disabled={busy}>
-                  {busy ? "Please wait…" : mode === "password" ? "Sign in" : mode === "forgot" ? "Send reset code" : "Send code"}
+                  {busy ? "Please wait…" : mode === "password" ? "Sign in" : mode === "signup" ? "Create account" : mode === "forgot" ? "Send reset code" : "Send code"}
                 </Button>
               </form>
 
-              <div className="mt-3 flex justify-between text-xs">
-                {mode !== "password" ? (
-                  <button type="button" className="font-semibold text-primary" onClick={() => { setMode("password"); setMethod("email"); }}>Use password instead</button>
-                ) : (
-                  <button type="button" className="font-semibold text-primary" onClick={() => setMode("signin")}>Use a code instead</button>
-                )}
-                {(mode === "password" || mode === "signin") && (
+              {mode !== "signup" && (
+                <div className="mt-3 flex justify-between text-xs">
+                  {mode !== "password" ? (
+                    <button type="button" className="font-semibold text-primary" onClick={() => setMode("password")}>Use password instead</button>
+                  ) : (
+                    <button type="button" className="font-semibold text-primary" onClick={() => setMode("signin")}>Email me a code instead</button>
+                  )}
                   <button type="button" className="font-semibold text-primary" onClick={() => setMode("forgot")}>Forgot password?</button>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div>
               <Button variant="outline" className="w-full" onClick={google}>Continue with Google</Button>
@@ -230,7 +235,7 @@ function AuthPage() {
               </p>
               <p className="mt-3 text-center text-sm text-muted-foreground">
                 {mode === "signup" ? "Already have an account?" : "New to Pink Wheel?"}{" "}
-                <button className="font-semibold text-primary" onClick={() => setMode(mode === "signup" ? "signin" : "signup")}>
+                <button className="font-semibold text-primary" onClick={() => setMode(mode === "signup" ? "password" : "signup")}>
                   {mode === "signup" ? "Sign in" : "Create account"}
                 </button>
               </p>
