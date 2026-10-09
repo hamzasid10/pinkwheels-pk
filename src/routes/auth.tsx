@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -219,7 +219,10 @@ function AuthPage() {
                 <p className="mt-2 text-center text-xs text-muted-foreground">Google sign-up creates a rider account. Use email or phone to register as a driver.</p>
               )}
 
-              <p className="mt-5 text-center text-sm text-muted-foreground">
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                By continuing you agree to our <Link to="/terms" className="font-semibold text-primary">Terms</Link> and <Link to="/privacy" className="font-semibold text-primary">Privacy policy</Link>.
+              </p>
+              <p className="mt-3 text-center text-sm text-muted-foreground">
                 {mode === "signup" ? "Already have an account?" : "New to Pink Wheel?"}{" "}
                 <button className="font-semibold text-primary" onClick={() => setMode(mode === "signup" ? "signin" : "signup")}>
                   {mode === "signup" ? "Sign in" : "Create account"}

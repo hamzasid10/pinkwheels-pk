@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import { Logo } from "@/components/Brand";
+import { InfoFooter } from "@/components/InfoPage";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
@@ -240,7 +241,8 @@ function Landing() {
             <p className="mt-2 text-muted-foreground">Always here, day or night.</p>
           </div>
         </div>
-        <p className="pb-8 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Pink Wheel</p>
+        <InfoFooter />
+        <div className="pb-8" />
       </footer>
     </div>
   );
