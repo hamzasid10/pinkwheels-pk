@@ -18,7 +18,7 @@ export function inServiceArea(p: LatLng) {
 }
 
 export function nearestCity(p: LatLng) {
-  return [...CITIES].sort((a, b) => km(p, a) - km(p, b))[0];
+  return [...CITIES].sort((a, b) => km(p, a) - km(p, b))[0]!;
 }
 
 export function km(a: LatLng, b: LatLng) {
