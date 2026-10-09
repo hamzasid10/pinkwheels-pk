@@ -16,7 +16,7 @@ import { PlaceInput, type Place } from "@/components/maps/PlaceInput";
 import { decodePolyline, distanceToPath, pathIndex } from "@/lib/maps/cities";
 
 export const Route = createFileRoute("/_authenticated/pool/")({
-  head: () => ({ meta: [{ title: "Pink Pool — Shared rides by women" }, { name: "description", content: "Find cheaper shared rides offered by verified women drivers going your way." }] }),
+  head: () => ({ meta: [{ title: "Pink Pool — Shared rides by women" }, { name: "description", content: "Find cheaper shared rides offered by verified women drivers going your way." }, { property: "og:title", content: "Pink Pool — Shared rides by women" }, { property: "og:description", content: "Find cheaper shared rides offered by verified women drivers going your way." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: PoolList,
 });
 

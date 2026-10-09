@@ -16,7 +16,7 @@ import { useMe } from "@/lib/pink";
 import { COUNTRY_CODES, OtpVerify, otpErrorMessage, toE164 } from "@/components/OtpVerify";
 
 export const Route = createFileRoute("/_authenticated/account")({
-  head: () => ({ meta: [{ title: "Account — Pink Wheel" }, { name: "description", content: "Change your email or phone with a verification code." }] }),
+  head: () => ({ meta: [{ title: "Account — Pink Wheel" }, { name: "description", content: "Change your email or phone with a verification code." }, { property: "og:title", content: "Account — Pink Wheel" }, { property: "og:description", content: "Change your email or phone with a verification code." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Account,
 });
 

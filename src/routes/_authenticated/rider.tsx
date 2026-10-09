@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { pkr, useMe, type RideStatus } from "@/lib/pink";
 
 export const Route = createFileRoute("/_authenticated/rider")({
-  head: () => ({ meta: [{ title: "My Rides — Pink Wheel" }, { name: "description", content: "Your Pink Wheel rider dashboard." }] }),
+  head: () => ({ meta: [{ title: "My Rides — Pink Wheel" }, { name: "description", content: "Your Pink Wheel rider dashboard." }, { property: "og:title", content: "My Rides — Pink Wheel" }, { property: "og:description", content: "Your Pink Wheel rider dashboard." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: RiderDashboard,
 });
 

@@ -12,7 +12,7 @@ import { useMe, VEHICLES, type Vehicle } from "@/lib/pink";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/driver-register")({
-  head: () => ({ meta: [{ title: "Driver Registration — Pink Wheel" }, { name: "description", content: "Apply to drive with Pink Wheel." }] }),
+  head: () => ({ meta: [{ title: "Driver Registration — Pink Wheel" }, { name: "description", content: "Apply to drive with Pink Wheel." }, { property: "og:title", content: "Driver Registration — Pink Wheel" }, { property: "og:description", content: "Apply to drive with Pink Wheel." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: DriverRegister,
 });
 
