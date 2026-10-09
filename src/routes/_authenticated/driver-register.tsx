@@ -60,8 +60,9 @@ const schemas = [
   }),
 ];
 
-type Form = Record<string, string>;
-const EMPTY: Form = { full_name: "", guardian_name: "", date_of_birth: "", gender: "female", phone: "", email: "", home_address: "", city: "", emergency_contact_name: "", emergency_contact_phone: "", cnic: "", licence_no: "", licence_expiry: "", licence_category: "", make: "", model: "", model_year: "", color: "", reg_no: "" };
+const EMPTY = { full_name: "", guardian_name: "", date_of_birth: "", gender: "female", phone: "", email: "", home_address: "", city: "", emergency_contact_name: "", emergency_contact_phone: "", cnic: "", licence_no: "", licence_expiry: "", licence_category: "", make: "", model: "", model_year: "", color: "", reg_no: "" };
+type Form = typeof EMPTY;
+type FK = keyof Form;
 
 function DriverRegister() {
   const me = useMe();
@@ -124,8 +125,8 @@ function DriverRegister() {
 
   const docs = data.data?.docs ?? [];
   const hasDoc = (k: string) => docs.some((d) => d.doc_type === k);
-  const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
-  const field = (k: string, label: string, opts: { ph?: string; type?: string; optional?: boolean; disabled?: boolean } = {}) => (
+  const set = (k: FK, v: string) => setF((p) => ({ ...p, [k]: v }));
+  const field = (k: FK, label: string, opts: { ph?: string; type?: string; optional?: boolean; disabled?: boolean } = {}) => (
     <div><Label>{label}{opts.optional && <span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span>}</Label>
       <Input type={opts.type} value={f[k]} placeholder={opts.ph} disabled={opts.disabled} onChange={(e) => set(k, e.target.value)} /></div>
   );
