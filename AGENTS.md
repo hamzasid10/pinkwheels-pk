@@ -14,3 +14,5 @@
 - Driver live location lives in driver_locations (RLS: own write while online+consented, assigned rider/admin read); public nearby view only via the nearby_drivers() RPC returning rounded coords.
 - Use the shared Logo variants for application branding and BrandSplash for route loading; keep home-screen support manifest-only without offline caching so previews remain reliable.
 - MCP server lives in src/lib/mcp (one tool per file, OAuth via the backend's auth issuer, queries run with the caller's token so RLS applies) — external assistants act strictly as the signed-in user.
+- Driver profile stays on /driver with DriverProfile as its focused presentation module; existing ride and pool controls remain below it to preserve operational workflows without duplicate pages.
+- Driver profile totals aggregate completed ride fares and completed owned pool seats as gross earnings, counting pool journeys once; no reviews means an unrated display rather than a seeded rating.

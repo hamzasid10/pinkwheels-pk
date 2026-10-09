@@ -37,7 +37,7 @@ export function MobileMenu({ className }: { className?: string }) {
     ...(!approved ? [{ label: "Become a Driver", to: "/driver-register", icon: CarFront, auth: true }] : []),
     ...(approved ? [{ label: "Driver Dashboard", to: "/driver", icon: LayoutDashboard, auth: true }] : []),
     ...(isAdmin ? [{ label: "Admin Dashboard", to: "/admin", icon: ShieldCheck, auth: true }] : []),
-    { label: "My Profile", to: "/account", icon: User, auth: true },
+    { label: "My Profile", to: user?.role === "driver" || driver.data ? "/driver" : "/account", icon: User, auth: true },
     { label: "Notifications", to: "/rider", icon: Bell, auth: true },
     { label: "Help & Support", to: "/contact", icon: HelpCircle },
     { label: "Settings", to: "/account", icon: Settings, auth: true },
