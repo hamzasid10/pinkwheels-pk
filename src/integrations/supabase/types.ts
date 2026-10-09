@@ -142,47 +142,83 @@ export type Database = {
       }
       drivers: {
         Row: {
+          admin_note: string | null
           city: string
           cnic: string
           created_at: string
+          date_of_birth: string | null
           email: string
           emergency_contact: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           full_name: string
+          gender: string | null
+          guardian_name: string | null
+          home_address: string | null
+          licence_category: string | null
+          licence_expiry: string | null
           licence_no: string
           online: boolean
           phone: string
           rating: number
+          reviewed_at: string | null
           status: Database["public"]["Enums"]["driver_status"]
+          submitted_at: string | null
+          terms_accepted_at: string | null
           user_id: string
           working_hours: string | null
         }
         Insert: {
+          admin_note?: string | null
           city: string
           cnic: string
           created_at?: string
+          date_of_birth?: string | null
           email: string
           emergency_contact?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           full_name: string
+          gender?: string | null
+          guardian_name?: string | null
+          home_address?: string | null
+          licence_category?: string | null
+          licence_expiry?: string | null
           licence_no: string
           online?: boolean
           phone: string
           rating?: number
+          reviewed_at?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
+          submitted_at?: string | null
+          terms_accepted_at?: string | null
           user_id: string
           working_hours?: string | null
         }
         Update: {
+          admin_note?: string | null
           city?: string
           cnic?: string
           created_at?: string
+          date_of_birth?: string | null
           email?: string
           emergency_contact?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           full_name?: string
+          gender?: string | null
+          guardian_name?: string | null
+          home_address?: string | null
+          licence_category?: string | null
+          licence_expiry?: string | null
           licence_no?: string
           online?: boolean
           phone?: string
           rating?: number
+          reviewed_at?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
+          submitted_at?: string | null
+          terms_accepted_at?: string | null
           user_id?: string
           working_hours?: string | null
         }
@@ -682,27 +718,39 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          color: string | null
           created_at: string
           driver_id: string
           id: string
           kind: Database["public"]["Enums"]["vehicle_kind"]
+          make: string | null
           make_model: string
+          model: string | null
+          model_year: number | null
           reg_no: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           driver_id: string
           id?: string
           kind: Database["public"]["Enums"]["vehicle_kind"]
+          make?: string | null
           make_model: string
+          model?: string | null
+          model_year?: number | null
           reg_no: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           driver_id?: string
           id?: string
           kind?: Database["public"]["Enums"]["vehicle_kind"]
+          make?: string | null
           make_model?: string
+          model?: string | null
+          model_year?: number | null
           reg_no?: string
         }
         Relationships: [
@@ -747,7 +795,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "driver" | "rider"
-      driver_status: "pending" | "approved" | "rejected" | "suspended"
+      driver_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "suspended"
+        | "incomplete"
+        | "info_requested"
       pool_request_status:
         | "pending"
         | "accepted"
@@ -898,7 +952,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "driver", "rider"],
-      driver_status: ["pending", "approved", "rejected", "suspended"],
+      driver_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "suspended",
+        "incomplete",
+        "info_requested",
+      ],
       pool_request_status: [
         "pending",
         "accepted",

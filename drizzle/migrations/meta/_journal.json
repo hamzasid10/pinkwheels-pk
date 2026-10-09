@@ -57,6 +57,13 @@
       "when": 1791572293227,
       "tag": "0007_profile_after_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791579103218,
+      "tag": "0008_driver_onboarding",
+      "breakpoints": true
     }
   ]
 }
