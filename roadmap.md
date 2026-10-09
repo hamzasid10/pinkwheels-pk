@@ -1,0 +1,4 @@
+- [ ] Prepare full logo and compact icon from the supplied artwork.
+- [ ] Apply branding to headers, sign-in, landing, About, and loading screens.
+- [ ] Add favicon and home-screen icons with safe padding.
+- [ ] Verify branding and existing page navigation.
