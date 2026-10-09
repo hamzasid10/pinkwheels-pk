@@ -13,7 +13,7 @@ import { DriverPoolSection } from "@/components/Pool";
 import { pkr, useMe, type RideStatus } from "@/lib/pink";
 
 export const Route = createFileRoute("/_authenticated/driver")({
-  head: () => ({ meta: [{ title: "Driver Dashboard — Pink Wheel" }, { name: "description", content: "Manage rides and earnings." }] }),
+  head: () => ({ meta: [{ title: "Driver Dashboard — Pink Wheel" }, { name: "description", content: "Manage rides and earnings." }, { property: "og:title", content: "Driver Dashboard — Pink Wheel" }, { property: "og:description", content: "Manage rides and earnings." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: DriverDashboard,
 });
 

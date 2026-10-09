@@ -12,3 +12,4 @@
 - Google Maps: browser key only renders maps (src/components/maps/GoogleMap.tsx); Places, geocoding and Routes go through auth-protected server fns in src/lib/maps/maps.functions.ts via the connector gateway — keeps billable calls authenticated and keys server-side.
 - Ride fares are computed from the admin-editable fare_settings table and re-computed by a DB trigger on insert — never trust client fares or hardcode prices.
 - Driver live location lives in driver_locations (RLS: own write while online+consented, assigned rider/admin read); public nearby view only via the nearby_drivers() RPC returning rounded coords.
+- Use the shared Logo variants for application branding and BrandSplash for route loading; keep home-screen support manifest-only without offline caching so previews remain reliable.

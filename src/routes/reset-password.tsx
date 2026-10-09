@@ -14,6 +14,8 @@ export const Route = createFileRoute("/reset-password")({
       { name: "description", content: "Choose a new password for your Pink Wheel account." },
       { property: "og:title", content: "Reset password — Pink Wheel" },
       { property: "og:description", content: "Choose a new password for your Pink Wheel account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ResetPassword,
@@ -36,7 +38,7 @@ function ResetPassword() {
   return (
     <div className="grid min-h-screen place-items-center bg-gradient-blush px-4">
       <div className="w-full max-w-md">
-        <Logo className="mb-6 justify-center" />
+        <Logo variant="full" className="mb-6 justify-center" />
         <form onSubmit={save} className="space-y-3 rounded-3xl border bg-card p-6 shadow-card">
           <h1 className="text-2xl font-semibold">Choose a new password</h1>
           <div><Label>New password</Label><Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} required /></div>

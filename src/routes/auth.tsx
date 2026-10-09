@@ -21,6 +21,8 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Pink Wheel rider or driver account with a one-time code." },
       { property: "og:title", content: "Sign in — Pink Wheel" },
       { property: "og:description", content: "Join Pink Wheel as a rider or a driver." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -136,7 +138,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen place-items-center bg-gradient-blush px-4 py-10">
       <div className="w-full max-w-md">
-        <Logo className="mb-6 justify-center" />
+        <Logo variant="full" className="mb-6 justify-center" />
         <div className="rounded-3xl border bg-card p-6 shadow-card sm:p-8">
           {step === "otp" ? (
             <OtpVerify target={target} onVerify={verify} onResend={() => sendCode(target)} onChange={() => setStep("form")}

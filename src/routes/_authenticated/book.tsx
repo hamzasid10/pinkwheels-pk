@@ -22,8 +22,7 @@ export const Route = createFileRoute("/_authenticated/book")({
       { title: "Book a Ride — Pink Wheel" },
       { name: "description", content: "Pick your pickup and drop-off on the map and ride with a verified female driver." },
       { property: "og:title", content: "Book a Ride — Pink Wheel" },
-      { property: "og:description", content: "Live map booking with verified female drivers in Lahore, Gujranwala, Islamabad and Rawalpindi." },
-    ],
+      { property: "og:description", content: "Live map booking with verified female drivers in Lahore, Gujranwala, Islamabad and Rawalpindi." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }],
   }),
   component: BookPage,
 });

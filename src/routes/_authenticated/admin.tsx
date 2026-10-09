@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { pkr, STATUS_LABEL, useMe, type RideStatus } from "@/lib/pink";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin — Pink Wheel" }, { name: "description", content: "Pink Wheel admin panel." }] }),
+  head: () => ({ meta: [{ title: "Admin — Pink Wheel" }, { name: "description", content: "Pink Wheel admin panel." }, { property: "og:title", content: "Admin — Pink Wheel" }, { property: "og:description", content: "Pink Wheel admin panel." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AdminPage,
 });
 

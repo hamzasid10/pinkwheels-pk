@@ -91,9 +91,7 @@ function Landing() {
       <section className="bg-gradient-blush">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-10 md:grid-cols-2 md:pt-16">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-              <Sparkles className="h-3.5 w-3.5" /> Women Moving Women
-            </span>
+            <Logo variant="full" className="w-fit" />
             <h1 className="mt-5 text-5xl font-semibold leading-[1.02] sm:text-6xl">
               Safe Rides.<br />By Women.<br /><em className="text-primary">For Women.</em>
             </h1>
@@ -228,8 +226,7 @@ function Landing() {
       <footer id="contact" className="border-t bg-secondary/50">
         <div className="mx-auto grid max-w-6xl gap-6 px-5 py-12 sm:grid-cols-3">
           <div>
-            <Logo />
-            <p className="mt-3 text-sm text-muted-foreground">Women Moving Women.</p>
+            <Logo variant="full" className="w-fit" />
           </div>
           <div className="text-sm">
             <p className="font-semibold">Contact</p>

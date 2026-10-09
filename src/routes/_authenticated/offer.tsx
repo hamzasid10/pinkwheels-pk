@@ -20,7 +20,7 @@ import { pkr, routeFare, useFares, useMe } from "@/lib/pink";
 import { FLEX_OPTIONS, fmtDate, fmtTime, type PoolRoute } from "@/lib/pool";
 
 export const Route = createFileRoute("/_authenticated/offer")({
-  head: () => ({ meta: [{ title: "Offer My Route — Pink Pool" }, { name: "description", content: "Offer empty seats on a journey you're already making." }] }),
+  head: () => ({ meta: [{ title: "Offer My Route — Pink Pool" }, { name: "description", content: "Offer empty seats on a journey you're already making." }, { property: "og:title", content: "Offer My Route — Pink Pool" }, { property: "og:description", content: "Offer empty seats on a journey you're already making." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: OfferPage,
 });
 

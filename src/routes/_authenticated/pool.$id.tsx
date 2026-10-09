@@ -15,7 +15,7 @@ import { pkr, routeFare, useFares, useMe } from "@/lib/pink";
 import { deviationKm, fmtDate, fmtTime } from "@/lib/pool";
 
 export const Route = createFileRoute("/_authenticated/pool/$id")({
-  head: () => ({ meta: [{ title: "Pink Pool Route — Pink Wheel" }, { name: "description", content: "View a shared route and request a seat." }] }),
+  head: () => ({ meta: [{ title: "Pink Pool Route — Pink Wheel" }, { name: "description", content: "View a shared route and request a seat." }, { property: "og:title", content: "Pink Pool Route — Pink Wheel" }, { property: "og:description", content: "View a shared route and request a seat." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: RouteView,
 });
 
