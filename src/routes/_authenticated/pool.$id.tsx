@@ -5,12 +5,13 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { BadgeCheck, KeyRound, Radio, ShieldCheck, Star, Users } from "lucide-react";
 import { AppShell, MapPlaceholder, Panel, SafetyActions } from "@/components/Brand";
+import { GoogleMap } from "@/components/maps/GoogleMap";
 import { Avatar, ReportButton, RouteStatusPill, SeatStatusPill, VerifiedBadge } from "@/components/Pool";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { estimateFare, pkr, useMe } from "@/lib/pink";
+import { pkr, routeFare, useFares, useMe } from "@/lib/pink";
 import { deviationKm, fmtDate, fmtTime } from "@/lib/pool";
 
 export const Route = createFileRoute("/_authenticated/pool/$id")({
@@ -40,6 +41,7 @@ function RouteView() {
   const [f, setF] = useState({ pickup_location: "", dropoff_location: "", seats_requested: 1, emergency_contact: "" });
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const fares = useFares();
 
   if (route.isLoading) return <AppShell title="Pink Pool"><p className="text-muted-foreground">Loading…</p></AppShell>;
   const r = route.data;
@@ -49,7 +51,7 @@ function RouteView() {
   const latest = active ?? (mine.data ?? [])[0];
   const full = r.available_seats === 0;
   const bookable = ["open", "almost_full"].includes(r.status) && !full && r.driver_id !== uid;
-  const privateFare = estimateFare(r.vehicle_kind, f.pickup_location || r.start_location, f.dropoff_location || r.destination);
+  const privateFare = r.distance_km != null ? routeFare(fares.data?.find((x) => x.vehicle === r.vehicle_kind), Number(r.distance_km), Number(r.duration_min ?? 0)) ?? 0 : 0;
   const poolFare = r.price_per_seat * f.seats_requested;
   const dev = deviationKm(r.start_location, r.destination, f.pickup_location, f.dropoff_location);
 
@@ -89,7 +91,7 @@ function RouteView() {
               </div>
               <RouteStatusPill status={r.status} />
             </div>
-            <div className="mt-4"><MapPlaceholder from={r.start_location} to={r.destination} /></div>
+            <div className="mt-4">{r.start_lat != null && r.dest_lat != null ? <GoogleMap className="h-60" polyline={r.route_polyline} fitKey={r.id} pins={[{ id: "pickup", pos: { lat: r.start_lat, lng: r.start_lng! }, kind: "pickup" }, { id: "dropoff", pos: { lat: r.dest_lat, lng: r.dest_lng! }, kind: "dropoff" }]} /> : <MapPlaceholder from={r.start_location} to={r.destination} />}{r.distance_km != null && <p className="mt-1.5 text-xs text-muted-foreground">{Number(r.distance_km)} km · about {Number(r.duration_min)} min</p>}</div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <Info l="Starting point" v={r.start_location} />
               <Info l="Destination" v={r.destination} />
@@ -160,7 +162,7 @@ function RouteView() {
                   )}
                   <div className="rounded-2xl border border-primary/30 bg-accent/50 p-3 text-sm">
                     <p className="font-semibold text-primary">Save with Pink Pool</p>
-                    <div className="mt-1 flex justify-between"><span>Normal Pink Wheel ride</span><span className="line-through">{pkr(privateFare)}</span></div>
+                    {privateFare > 0 && <div className="mt-1 flex justify-between"><span>Normal Pink Wheel ride</span><span className="line-through">{pkr(privateFare)}</span></div>}
                     <div className="flex justify-between font-semibold"><span>Pink Pool</span><span>{pkr(poolFare)}</span></div>
                     {privateFare > poolFare && <p className="mt-1 text-success">You save {pkr(privateFare - poolFare)}</p>}
                   </div>
