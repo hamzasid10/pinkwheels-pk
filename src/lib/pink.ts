@@ -49,6 +49,22 @@ export function estimateFare(v: Vehicle, pickup: string, destination: string) {
 
 export const pkr = (n: number) => `Rs ${n.toLocaleString("en-PK")}`;
 
+export type FareSetting = { vehicle: Vehicle; base_fare: number; per_km: number; per_min: number; min_fare: number };
+
+/** Admin-configured fares (no invented defaults). */
+export function useFares() {
+  return useQuery({
+    queryKey: ["fare_settings"],
+    queryFn: async () => ((await supabase.from("fare_settings").select("*")).data ?? []) as FareSetting[],
+  });
+}
+
+/** Same formula as the database trigger. Returns null when fares aren't configured. */
+export function routeFare(f: FareSetting | undefined, km: number, min: number) {
+  if (!f) return null;
+  return Math.max(f.min_fare, Math.round((f.base_fare + f.per_km * km + f.per_min * min) / 10) * 10);
+}
+
 export function useMe() {
   return useQuery({
     queryKey: ["me"],

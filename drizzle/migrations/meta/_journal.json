@@ -43,6 +43,13 @@
       "when": 1791565033674,
       "tag": "0005_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791570150197,
+      "tag": "0006_maps_rides_pool",
+      "breakpoints": true
     }
   ]
 }

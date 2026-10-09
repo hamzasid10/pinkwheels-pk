@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Car, FileCheck, Headphones, Inbox, Star, Wallet, CheckCircle2 } from "lucide-react";
-import { AppShell, MapPlaceholder, Panel, SafetyActions, StatusPill, StatusTrack } from "@/components/Brand";
+import { AppShell, Panel, SafetyActions, StatusPill, StatusTrack } from "@/components/Brand";
+import { RideMap, useShareLocation } from "@/components/maps/RideMap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -33,12 +34,14 @@ function DriverDashboard() {
     queryKey: ["driver-rides", uid], enabled: !!uid, refetchInterval: 8000,
     queryFn: async () => (await supabase.from("ride_requests").select("*").eq("driver_id", uid!).order("created_at", { ascending: false })).data ?? [],
   });
+  const locErr = useShareLocation(uid, !!driver.data?.online && driver.data?.status === "approved" && !!me.data?.profile?.location_sharing);
 
   if (driver.isLoading || me.isLoading) return <AppShell title="Driver dashboard"><p className="text-muted-foreground">Loading…</p></AppShell>;
   if (!driver.data) {
     return <AppShell title="Driver dashboard"><Panel><p>You haven't applied yet.</p><Button className="mt-3" variant="hero" asChild><Link to="/driver-register">Start application</Link></Button></Panel></AppShell>;
   }
   const d = driver.data;
+  const sharing = me.data?.profile?.location_sharing;
   const all = rides.data ?? [];
   const requests = all.filter((r) => r.status === "driver_assigned");
   const current = all.find((r) => r.status === "driver_arriving" || r.status === "ride_started");
@@ -64,15 +67,30 @@ function DriverDashboard() {
         </div>
       )}
       <div className="grid gap-5 md:grid-cols-2">
-        <Panel className="flex items-center justify-between md:col-span-2">
-          <div>
-            <p className="font-semibold">{d.online ? "You're online" : "You're offline"}</p>
-            <p className="text-sm text-muted-foreground">{d.online ? "Ready to receive ride requests" : "Go online to receive rides"}</p>
+        <Panel className="space-y-4 md:col-span-2">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold">Share my live location</p>
+              <p className="text-sm text-muted-foreground">Only while you're online. Riders see you only on their own assigned ride; others see an anonymous dot.</p>
+            </div>
+            <Switch checked={!!sharing} onCheckedChange={async (v) => {
+              if (v && !window.confirm("Allow Pink Wheel to use your GPS location while you're online?")) return;
+              await supabase.from("profiles").update({ location_sharing: v }).eq("id", uid!);
+              if (!v && d.online) await supabase.from("drivers").update({ online: false }).eq("user_id", uid!);
+              me.refetch(); driver.refetch();
+            }} />
           </div>
-          <Switch checked={d.online} disabled={d.status !== "approved"} onCheckedChange={async (v) => {
-            await supabase.from("drivers").update({ online: v }).eq("user_id", uid!);
-            driver.refetch();
-          }} />
+          <div className="flex items-center justify-between gap-4 border-t pt-4">
+            <div>
+              <p className="font-semibold">{d.online ? "You're online" : "You're offline"}</p>
+              <p className="text-sm text-muted-foreground">{d.online ? "Ready to receive ride requests" : sharing ? "Go online to receive rides" : "Turn on location sharing to go online"}</p>
+              {locErr && d.online && <p className="text-xs text-destructive">{locErr}</p>}
+            </div>
+            <Switch checked={d.online} disabled={d.status !== "approved" || (!sharing && !d.online)} onCheckedChange={async (v) => {
+              await supabase.from("drivers").update({ online: v }).eq("user_id", uid!);
+              driver.refetch();
+            }} />
+          </div>
         </Panel>
 
         <div className="grid grid-cols-2 gap-3 md:col-span-2 md:grid-cols-4">
@@ -110,7 +128,7 @@ function DriverDashboard() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between"><b>{current.booking_code}</b><StatusPill status={current.status as RideStatus} /></div>
               <StatusTrack status={current.status as RideStatus} />
-              <MapPlaceholder from={current.pickup} to={current.destination} />
+              <RideMap ride={current} track={false} />
               <p>Rider: <b>{current.rider_name}</b> · <a className="text-primary" href={`tel:${current.rider_phone}`}>{current.rider_phone}</a></p>
               {current.status === "driver_arriving" ? (
                 <div className="flex gap-2">

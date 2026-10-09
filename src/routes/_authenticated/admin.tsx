@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { AppShell, Panel, StatusPill } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { AdminPoolSection } from "@/components/Pool";
+import { AdminFares, AdminLiveMap } from "@/components/maps/AdminMaps";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { pkr, STATUS_LABEL, useMe, type RideStatus } from "@/lib/pink";
@@ -82,7 +83,12 @@ function AdminPage() {
           <TabsTrigger value="riders">Riders</TabsTrigger>
           <TabsTrigger value="complaints">Complaints</TabsTrigger>
           <TabsTrigger value="sos">Emergency</TabsTrigger>
+          <TabsTrigger value="fares">Fares</TabsTrigger>
+          <TabsTrigger value="live">Live map</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="fares"><AdminFares /></TabsContent>
+        <TabsContent value="live"><AdminLiveMap drivers={d.drivers} /></TabsContent>
 
         <TabsContent value="rides" className="space-y-3">
           {d.rides.length === 0 && <Panel>No bookings yet.</Panel>}
