@@ -1,3 +1,4 @@
+import { MobileMenu } from "@/components/MobileMenu";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BadgeCheck, Bike, Car, Clock, HeartHandshake, KeyRound, Mail, MapPin, Phone, Share2,
@@ -74,7 +75,7 @@ function Landing() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-          <Logo />
+          <div className="flex min-w-0 items-center gap-1"><MobileMenu className="-ml-2" /><Logo /></div>
           <nav className="hidden gap-6 text-sm font-medium text-muted-foreground md:flex">
             <a href="#how">How it works</a>
             <a href="#safety">Safety</a>
