@@ -129,26 +129,44 @@ function AdminPage() {
           {d.drivers.length === 0 && <Panel>No driver applications yet.</Panel>}
           {d.drivers.map((x) => {
             const v = veh(x.user_id);
+            const myDocs = d.docs.filter((doc) => doc.driver_id === x.user_id);
+            const expired = x.licence_expiry && x.licence_expiry < new Date().toISOString().slice(0, 10);
+            const decide = (status: "approved" | "rejected" | "info_requested" | "suspended", ask?: string) => {
+              let note: string | null = null;
+              if (ask) {
+                note = window.prompt(ask)?.trim() ?? "";
+                if (!note) return toast.error("A note is required");
+                note = note.slice(0, 500);
+              }
+              return run(supabase.from("drivers").update({ status, admin_note: note, reviewed_at: new Date().toISOString(), ...(status !== "approved" ? { online: false } : {}) }).eq("user_id", x.user_id), "Driver updated");
+            };
             return (
               <Panel key={x.user_id}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-semibold">{x.full_name} · {x.city}</p>
-                  <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold capitalize text-accent-foreground">{x.status}</span>
+                  <div className="flex items-center gap-3">
+                    <DocThumb path={myDocs.filter((doc) => doc.doc_type === "selfie" || doc.doc_type === "photo").at(-1)?.file_path} />
+                    <p className="font-semibold">{x.full_name} · {x.city}</p>
+                  </div>
+                  <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold capitalize text-accent-foreground">{x.status.replace("_", " ")}</span>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{x.phone} · {x.email} · CNIC {x.cnic} · Licence {x.licence_no}</p>
-                <p className="text-sm text-muted-foreground">{v ? `${v.kind} · ${v.make_model} · ${v.reg_no}` : "No vehicle"} · Hours: {x.working_hours}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{x.phone} · {x.email} · CNIC {x.cnic || "—"}{x.date_of_birth && ` · DOB ${x.date_of_birth}`}</p>
+                <p className="text-sm text-muted-foreground">Licence {x.licence_no || "—"} · {x.licence_category ?? "—"} · expires <span className={expired ? "font-semibold text-destructive" : ""}>{x.licence_expiry ?? "—"}{expired && " (expired)"}</span></p>
+                <p className="text-sm text-muted-foreground">{v ? `${v.kind} · ${v.make ?? ""} ${v.model ?? v.make_model} ${v.model_year ?? ""} · ${v.color ?? ""} · ${v.reg_no}` : "No vehicle"}</p>
+                <p className="text-sm text-muted-foreground">Address: {x.home_address ?? "—"} · Emergency: {x.emergency_contact ?? "—"} · Applied {new Date(x.submitted_at ?? x.created_at).toLocaleDateString()}</p>
+                {x.admin_note && <p className="mt-1 text-sm">Note to driver: {x.admin_note}</p>}
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {d.docs.filter((doc) => doc.driver_id === x.user_id).map((doc) => (
-                    <Button key={doc.id} size="sm" variant="outline" onClick={() => openDoc(doc.file_path)}>View {doc.doc_type}</Button>
+                  {myDocs.map((doc) => (
+                    <Button key={doc.id} size="sm" variant="outline" onClick={() => openDoc(doc.file_path)}>View {doc.doc_type.replace("_", " ")}</Button>
                   ))}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" onClick={async () => {
-                    await run(supabase.from("drivers").update({ status: "approved" }).eq("user_id", x.user_id), "Driver approved");
+                  <Button size="sm" disabled={!!expired || x.status === "incomplete"} onClick={async () => {
+                    await decide("approved");
                     await supabase.from("driver_documents").update({ verified: true }).eq("driver_id", x.user_id);
                   }}>Approve</Button>
-                  <Button size="sm" variant="outline" onClick={() => run(supabase.from("drivers").update({ status: "rejected" }).eq("user_id", x.user_id), "Driver rejected")}>Reject</Button>
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => run(supabase.from("drivers").update({ status: "suspended", online: false }).eq("user_id", x.user_id), "Driver suspended")}>Suspend</Button>
+                  <Button size="sm" variant="outline" onClick={() => decide("info_requested", "What information does the driver need to provide?")}>Request more info</Button>
+                  <Button size="sm" variant="outline" onClick={() => decide("rejected", "Reason for rejection (the driver will see this):")}>Reject</Button>
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => decide("suspended", "Reason for suspension:")}>Suspend</Button>
                 </div>
               </Panel>
             );
@@ -195,4 +213,13 @@ function AdminPage() {
       </Tabs>
     </AppShell>
   );
+}
+
+function DocThumb({ path }: { path?: string | undefined }) {
+  const url = useQuery({
+    queryKey: ["doc-thumb", path], enabled: !!path, staleTime: 240000,
+    queryFn: async () => (await supabase.storage.from("driver-docs").createSignedUrl(path!, 300)).data?.signedUrl ?? null,
+  });
+  if (!url.data) return <div className="h-10 w-10 rounded-full bg-muted" />;
+  return <img src={url.data} alt="Driver" className="h-10 w-10 rounded-full object-cover" />;
 }
