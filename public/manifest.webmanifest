@@ -1,0 +1,13 @@
+{
+  "name": "Pink Wheel",
+  "short_name": "Pink Wheel",
+  "description": "Women Moving Women — Pink Wheel rides in Pakistan",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "icons": [
+    { "src": "/__l5e/assets-v1/99aec6b1-bc11-43fd-b977-e10bed4888f4/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/__l5e/assets-v1/5f4d23cd-0e1d-419d-851d-1a8935932c85/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

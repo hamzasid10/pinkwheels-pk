@@ -7,15 +7,32 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_FLOW, STATUS_LABEL, type RideStatus } from "@/lib/pink";
 import { cn } from "@/lib/utils";
+import fullLogo from "@/assets/pink-wheel-full.png.asset.json";
+import brandIcon from "@/assets/pink-wheel-icon.png";
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, variant = "compact" }: { className?: string; variant?: "compact" | "full" }) {
   return (
-    <Link to="/" className={cn("flex items-center gap-2", className)}>
-      <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-rose shadow-glow">
-        <span className="h-3.5 w-3.5 rounded-full border-[3px] border-primary-foreground" />
-      </span>
-      <span className="font-display text-xl font-semibold tracking-tight">Pink Wheel</span>
+    <Link to="/" aria-label="Pink Wheel home" className={cn("flex shrink-0 items-center gap-2", className)}>
+      {variant === "full" ? (
+        <img src={fullLogo.url} alt="Pink Wheel — Women Moving Women" width={512} height={512} className="aspect-square w-40 max-w-full object-contain sm:w-44" />
+      ) : (
+        <>
+          <img src={brandIcon} alt="" width={36} height={36} className="h-9 w-8 shrink-0 object-contain" />
+          <span className="whitespace-nowrap font-display text-lg font-semibold sm:text-xl">Pink Wheel</span>
+        </>
+      )}
     </Link>
+  );
+}
+
+export function BrandSplash() {
+  return (
+    <div role="status" aria-label="Loading Pink Wheel" className="grid min-h-screen place-items-center bg-gradient-blush">
+      <div className="flex flex-col items-center gap-5">
+        <img src={fullLogo.url} alt="Pink Wheel — Women Moving Women" width={512} height={512} className="aspect-square w-52 max-w-full object-contain" />
+        <span className="h-5 w-5 rounded-full border-2 border-primary/20 border-t-primary motion-safe:animate-spin" />
+      </div>
+    </div>
   );
 }
 
@@ -38,7 +55,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
               navigate({ to: "/" });
             }}
           >
-            <LogOut /> Sign out
+            <LogOut /><span className="hidden sm:inline">Sign out</span>
           </Button>
           </div>
         </div>
