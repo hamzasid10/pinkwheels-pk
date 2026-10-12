@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Phone, Share2, ShieldAlert } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { sendSos } from "@/lib/sos.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -127,17 +129,24 @@ export function MapPlaceholder({ from, to }: { from: string; to: string }) {
 }
 
 export function SafetyActions({ rideId, shareText }: { rideId?: string; shareText: string }) {
+  const sosFn = useServerFn(sendSos);
+  const [sending, setSending] = useState(false);
   async function sos() {
-    const { data: u } = await supabase.auth.getUser();
-    if (u.user) {
-      await supabase.from("complaints").insert({
-        user_id: u.user.id,
-        ride_id: rideId ?? null,
-        kind: "emergency",
-        message: "SOS button pressed",
+    if (sending) return;
+    setSending(true);
+    try {
+      // Best-effort location; never delay the alert for more than a few seconds.
+      const pos = await new Promise<GeolocationPosition | null>((resolve) => {
+        if (typeof navigator === "undefined" || !navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), { timeout: 4000, maximumAge: 60000 });
       });
+      await sosFn({ data: { rideId: rideId ?? null, lat: pos?.coords.latitude ?? null, lng: pos?.coords.longitude ?? null } });
+      toast.error("SOS sent. Our safety team has been alerted. Call 15 for police.");
+    } catch {
+      toast.error("Could not send SOS. Please call 15 now.");
+    } finally {
+      setSending(false);
     }
-    toast.error("SOS sent. Our safety team has been alerted. Call 15 for police.");
   }
   async function share() {
     if (navigator.share) {
@@ -153,7 +162,7 @@ export function SafetyActions({ rideId, shareText }: { rideId?: string; shareTex
   }
   return (
     <div className="grid grid-cols-3 gap-2">
-      <Button variant="sos" onClick={sos}>
+      <Button variant="sos" onClick={sos} disabled={sending}>
         <ShieldAlert /> SOS
       </Button>
       <Button variant="outline" onClick={share}>
