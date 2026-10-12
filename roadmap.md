@@ -5,3 +5,6 @@
 - [x] Redesign the driver profile with real data, private verification details and editing/navigation.
 - [x] Verify statistics tests, signed-out protection and isolated mobile/desktop profile interactions and approval gating.
 - [ ] Verify saving and reading back profile edits with a real signed-in driver; blocked by no available requesting-user account/session.
+- [ ] Update rider booking to a map-first layout with reference-inspired ride choices and preserved required details.
+- [ ] Open default rider signup/sign-in on booking while preserving history and role-specific navigation.
+- [ ] Verify rider entry, ride choices and mobile/desktop layouts with available authentication.
