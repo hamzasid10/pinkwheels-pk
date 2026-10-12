@@ -18,3 +18,4 @@
 - Driver profile totals aggregate completed ride fares and completed owned pool seats as gross earnings, counting pool journeys once; no reviews means an unrated display rather than a seeded rating.
 
 - Default rider entry uses /dashboard → /book with the existing map-based booking flow; /rider remains ride history/tracking and explicit auth return paths take priority, preserving role-specific access and avoiding duplicate pages.
+- SOS: SafetyActions calls the auth-protected sendSos server fn (src/lib/sos.functions.ts), which saves the emergency complaint first and then sends a best-effort WhatsApp alert via the Twilio connector gateway — WhatsApp failures must never block the saved alert. Recipient/sender come from optional SOS_WHATSAPP_TO / TWILIO_WHATSAPP_FROM secrets (sandbox sender by default).
