@@ -12,6 +12,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       const { data: d } = await supabase.from("drivers").select("user_id").eq("user_id", uid).maybeSingle();
       throw redirect({ to: d ? "/driver" : "/driver-register" });
     }
-    throw redirect({ to: "/rider" });
+    throw redirect({ to: "/book" });
   },
 });

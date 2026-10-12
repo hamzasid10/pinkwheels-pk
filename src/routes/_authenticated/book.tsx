@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, Route as RouteIcon } from "lucide-react";
-import { AppShell, Panel, SafetyActions, StatusPill } from "@/components/Brand";
+import { CheckCircle2, Clock, ChevronDown, History, ShieldCheck, Users, Route as RouteIcon } from "lucide-react";
+import { AppShell, Logo, Panel, SafetyActions, StatusPill } from "@/components/Brand";
 import { GoogleMap, type MapPin } from "@/components/maps/GoogleMap";
 import { PlaceInput, type Place } from "@/components/maps/PlaceInput";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,12 @@ import { computeRoute, nearbyDrivers, reverseGeocode } from "@/lib/maps/maps.fun
 import { inServiceArea } from "@/lib/maps/cities";
 import { pkr, routeFare, useFares, useMe, VEHICLES, type Vehicle, type RideStatus } from "@/lib/pink";
 import { cn } from "@/lib/utils";
+import { MobileMenu } from "@/components/MobileMenu";
+import rideCar from "@/assets/ride-car.png";
+import rideScooty from "@/assets/ride-scooty.png";
+import rideBike from "@/assets/ride-bike.png";
+
+const vehicleImages = { car: rideCar, scooty: rideScooty, bike: rideBike };
 
 export const Route = createFileRoute("/_authenticated/book")({
   head: () => ({
@@ -61,8 +67,9 @@ function BookPage() {
   const mode = vehicle === "car" ? "DRIVE" : "TWO_WHEELER";
 
   useEffect(() => {
-    if (!pickup || !drop) { setInfo(null); return; }
+    if (!pickup || !drop) { setInfo(null); setRouting(false); return; }
     let live = true;
+    setInfo(null);
     setRouting(true);
     route({ data: { from: pickup, to: drop, mode } })
       .then((r) => live && setInfo(r))
@@ -135,10 +142,9 @@ function BookPage() {
   }
 
   if (booked) {
-    const bp: MapPin[] = booked.pickup_lat != null ? [
-      { id: "pickup", pos: { lat: booked.pickup_lat, lng: booked.pickup_lng! }, kind: "pickup" },
-      { id: "dropoff", pos: { lat: booked.dest_lat!, lng: booked.dest_lng! }, kind: "dropoff" },
-    ] : [];
+    const bp: MapPin[] = [];
+    if (booked.pickup_lat != null && booked.pickup_lng != null) bp.push({ id: "pickup", pos: { lat: booked.pickup_lat, lng: booked.pickup_lng }, kind: "pickup" });
+    if (booked.dest_lat != null && booked.dest_lng != null) bp.push({ id: "dropoff", pos: { lat: booked.dest_lat, lng: booked.dest_lng }, kind: "dropoff" });
     return (
       <AppShell title="Ride booked">
         <Panel className="mx-auto max-w-lg">
@@ -167,65 +173,65 @@ function BookPage() {
   }
 
   return (
-    <AppShell title="Book a ride">
-      <form onSubmit={submit} className="grid gap-4 md:grid-cols-[1fr_380px]">
-        <GoogleMap className="h-[42vh] min-h-[280px] shadow-card md:sticky md:top-20 md:h-[calc(100vh-7rem)]"
-          pins={pins} polyline={info?.polyline} onPinDrag={onDrag} fitKey={`${pickup?.lat},${drop?.lat},${info?.polyline?.length}`} />
-        <div className="-mt-10 space-y-4 rounded-t-3xl bg-background pt-4 md:mt-0 md:pt-0">
-          <Panel>
+    <div className="rider-booking bg-background">
+      <header className="rider-map-header border-b bg-card">
+        <div className="flex min-w-0 items-center gap-1"><MobileMenu /><Logo /></div>
+        <Button asChild variant="ghost" size="sm"><Link to="/rider"><History /> My rides</Link></Button>
+      </header>
+      <main className="rider-map-main">
+        <GoogleMap className="rider-live-map" pins={pins} polyline={info?.polyline} onPinDrag={onDrag}
+          fitKey={`${pickup?.lat},${drop?.lat},${info?.polyline?.length}`} />
+        <form onSubmit={submit} className="rider-booking-form">
+          <section aria-label="Your route" className="rider-addresses bg-card shadow-card">
             <div className="space-y-2">
               <PlaceInput value={pickup} onChange={setPickup} placeholder="Pickup location" allowGps dot="pickup" />
               <PlaceInput value={drop} onChange={setDrop} placeholder="Where to?" near={pickup ?? undefined} dot="dropoff" />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Drag the pins on the map to fine-tune. Serving Lahore, Gujranwala, Islamabad & Rawalpindi.</p>
-            {(info || routing) && (
-              <div className="mt-3 flex gap-4 rounded-2xl bg-accent px-4 py-3 text-sm">
-                {routing ? <span>Finding the best route…</span> : info && <>
-                  <span className="flex items-center gap-1.5"><RouteIcon className="h-4 w-4 text-primary" />{info.distanceKm} km</span>
-                  <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" />~{info.durationMin} min</span>
-                </>}
-              </div>
-            )}
-          </Panel>
-          <Panel title="Choose vehicle">
-            <div className="space-y-2">
+            <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Women moving women</span>
+              {routing ? <span role="status">Finding route…</span> : info ? <span>{info.distanceKm} km · {info.durationMin} min</span> : <span>Pakistan</span>}
+            </div>
+          </section>
+          <section aria-label="Choose your ride" className="rider-ride-sheet bg-card shadow-card">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border md:hidden" />
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div><h1 className="font-sans text-xl font-bold">Choose your ride</h1><p className="mt-0.5 text-xs text-muted-foreground">{pickup && drop ? "Your next journey" : `Where to, ${(name || "rider").split(" ")[0]}?`}</p></div>
+              {info && <span className="flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground"><Clock className="h-3.5 w-3.5" />{info.durationMin} min trip</span>}
+            </div>
+            <div role="group" aria-label="Vehicle options" className="space-y-2">
               {VEHICLES.map((v) => {
                 const fv = fareFor(v.id);
                 return (
-                  <button type="button" key={v.id} onClick={() => setVehicle(v.id)}
-                    className={cn("flex w-full items-center justify-between rounded-2xl border-2 px-4 py-3 text-left transition", vehicle === v.id ? "border-primary bg-accent" : "border-border bg-card")}>
-                    <span><span className="block font-semibold">{v.label}</span><span className="block text-xs text-muted-foreground">{v.desc}</span></span>
-                    <span className="text-right font-display text-lg font-semibold">
-                      {!info ? "—" : fv == null ? <span className="text-xs font-normal text-muted-foreground">Fare not set yet</span> : pkr(fv)}
-                    </span>
-                  </button>
+                  <Button variant="ghost" type="button" key={v.id} aria-pressed={vehicle === v.id} onClick={() => setVehicle(v.id)}
+                    className={cn("ride-option h-auto w-full justify-start gap-3 whitespace-normal rounded-2xl border-2 px-3 py-2.5 text-left", vehicle === v.id ? "border-primary bg-accent/40" : "border-transparent bg-card hover:bg-muted")}>
+                    <img src={vehicleImages[v.id]} alt="" width={816} height={816} loading="lazy" className="h-16 w-20 shrink-0 object-contain" />
+                    <span className="min-w-0 flex-1"><span className="flex items-center gap-2 text-base font-bold">{v.label}<span className="flex items-center gap-0.5 text-xs font-medium text-muted-foreground"><Users className="h-3 w-3" />{v.id === "car" ? "4" : "1"}</span></span><span className="mt-1 block text-xs font-normal text-muted-foreground">{v.id === "car" ? "Room to relax · AC comfort" : v.id === "scooty" ? "Light & easy city travel" : "A quick city ride"}</span></span>
+                    <span className="shrink-0 text-right"><span className="block text-sm font-bold">{fv != null ? pkr(fv) : "—"}</span><span className="mt-1 block max-w-20 text-[10px] font-normal text-muted-foreground">{!info ? "Set your route" : fv == null ? "Fare not set" : "Cash fare"}</span></span>
+                  </Button>
                 );
               })}
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Estimate from distance and travel time. Pay your driver in cash.</p>
-          </Panel>
-          <Panel title="When & who">
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Date</Label><Input type="date" min={today} value={f.ride_date} onChange={set("ride_date")} /></div>
-                <div><Label>Time</Label><Input type="time" value={f.ride_time} onChange={set("ride_time")} /></div>
+            <Button variant="ghost" className="mt-2 w-full justify-between rounded-xl border-t text-sm" asChild><Link to="/pool"><span className="flex items-center gap-2"><Users className="text-primary" /> Pink Pool · Shared rides</span><RouteIcon /></Link></Button>
+            <details className="rider-trip-details mt-3 border-t pt-3">
+              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold">Trip & contact details<ChevronDown className="h-4 w-4 text-muted-foreground" /></summary>
+              <div className="mt-3 space-y-3 pb-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label htmlFor="ride-date">Date</Label><Input id="ride-date" type="date" min={today} value={f.ride_date} onChange={set("ride_date")} /></div>
+                  <div><Label htmlFor="ride-time">Time</Label><Input id="ride-time" type="time" value={f.ride_time} onChange={set("ride_time")} /></div>
+                </div>
+                <div><Label htmlFor="rider-name">Rider name</Label><Input id="rider-name" value={name} onChange={set("rider_name")} /></div>
+                <div><Label htmlFor="rider-phone">Phone number</Label><Input id="rider-phone" type="tel" value={phone} onChange={set("rider_phone")} /></div>
+                <div><Label htmlFor="emergency-contact">Emergency contact (name & phone)</Label><Input id="emergency-contact" value={f.emergency_contact} onChange={set("emergency_contact")} placeholder="Ammi — 0300 1234567" /></div>
               </div>
-              <div><Label>Rider name</Label><Input value={name} onChange={set("rider_name")} /></div>
-              <div><Label>Phone number</Label><Input type="tel" value={phone} onChange={set("rider_phone")} /></div>
-              <div><Label>Emergency contact (name & phone)</Label><Input value={f.emergency_contact} onChange={set("emergency_contact")} placeholder="e.g. Ammi — 0300 1234567" /></div>
+            </details>
+            <div className="rider-booking-action mt-3 bg-card pt-2">
+              <Button type="submit" size="lg" className="w-full" disabled={busy || !ready}>{busy ? "Booking…" : fare != null ? `Book ${vLabel} · ${pkr(fare)}` : `Book ${vLabel}`}</Button>
+              {!ready && !busy && <details className="mt-2 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium text-primary">{routing ? "Finding your route…" : `Complete ${missing.length} required ${missing.length === 1 ? "detail" : "details"}`}</summary><ul className="mt-2 list-disc space-y-1 pl-4">{missing.map((m) => <li key={m}>{m}</li>)}</ul></details>}
+              <div className="mt-3 flex items-center justify-between gap-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Verified female drivers</span><Link to="/safety" className="font-semibold text-primary">Safety</Link></div>
             </div>
-          </Panel>
-          <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy || !ready}>
-            {busy ? "Booking…" : fare != null ? `Book ${VEHICLES.find((v) => v.id === vehicle)?.label} · ${pkr(fare)}` : "Book Ride"}
-          </Button>
-          {!ready && !busy && (
-            <div role="status" className="rounded-2xl border border-dashed border-primary/40 bg-accent/50 px-4 py-3 text-sm">
-              <p className="font-semibold">{routing ? "Finding the best route…" : "Still needed before you can book:"}</p>
-              {!routing && <ul className="mt-1 list-disc space-y-0.5 pl-5 text-muted-foreground">{missing.map((m) => <li key={m}>{m}</li>)}</ul>}
-            </div>
-          )}
-        </div>
-      </form>
-    </AppShell>
+          </section>
+        </form>
+      </main>
+    </div>
   );
 }

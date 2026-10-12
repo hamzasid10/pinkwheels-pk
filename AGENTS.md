@@ -16,3 +16,5 @@
 - MCP server lives in src/lib/mcp (one tool per file, OAuth via the backend's auth issuer, queries run with the caller's token so RLS applies) — external assistants act strictly as the signed-in user.
 - Driver profile stays on /driver with DriverProfile as its focused presentation module; existing ride and pool controls remain below it to preserve operational workflows without duplicate pages.
 - Driver profile totals aggregate completed ride fares and completed owned pool seats as gross earnings, counting pool journeys once; no reviews means an unrated display rather than a seeded rating.
+
+- Default rider entry uses /dashboard → /book with the existing map-based booking flow; /rider remains ride history/tracking and explicit auth return paths take priority, preserving role-specific access and avoiding duplicate pages.
