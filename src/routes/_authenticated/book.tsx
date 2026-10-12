@@ -44,7 +44,7 @@ const schema = z.object({
 type Booked = { id: string; booking_code: string; pickup: string; destination: string; vehicle: Vehicle; fare: number; status: RideStatus; trip_pin: string; route_polyline: string | null; pickup_lat: number | null; pickup_lng: number | null; dest_lat: number | null; dest_lng: number | null };
 type RouteInfo = { distanceKm: number; durationMin: number; polyline: string };
 
-export function BookPage() {
+function BookPage() {
   const me = useMe();
   const fares = useFares();
   const route = useServerFn(computeRoute);
