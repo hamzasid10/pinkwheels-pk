@@ -167,6 +167,13 @@ function AdminPage() {
                   <Button size="sm" variant="outline" onClick={() => decide("info_requested", "What information does the driver need to provide?")}>Request more info</Button>
                   <Button size="sm" variant="outline" onClick={() => decide("rejected", "Reason for rejection (the driver will see this):")}>Reject</Button>
                   <Button size="sm" variant="ghost" className="text-destructive" onClick={() => decide("suspended", "Reason for suspension:")}>Suspend</Button>
+                  <Button size="sm" variant="ghost" onClick={async () => {
+                    const name = window.prompt("Correct legal name (must match her CNIC):", x.full_name)?.trim();
+                    if (!name || name === x.full_name) return;
+                    if (name.length < 2 || name.length > 100) return toast.error("Enter a name of 2–100 letters");
+                    await run(supabase.from("drivers").update({ full_name: name }).eq("user_id", x.user_id), "Legal name updated");
+                    await supabase.from("profiles").update({ full_name: name }).eq("id", x.user_id);
+                  }}>Edit legal name</Button>
                 </div>
               </Panel>
             );
