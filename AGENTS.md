@@ -19,3 +19,4 @@
 
 - Default rider entry uses /dashboard → /book with the existing map-based booking flow; /rider remains ride history/tracking and explicit auth return paths take priority, preserving role-specific access and avoiding duplicate pages.
 - SOS: SafetyActions calls the auth-protected sendSos server fn (src/lib/sos.functions.ts), which saves the emergency complaint first and then sends a best-effort WhatsApp alert via the Twilio connector gateway — WhatsApp failures must never block the saved alert. Recipient/sender come from optional SOS_WHATSAPP_TO / TWILIO_WHATSAPP_FROM secrets (sandbox sender by default).
+- Native apps are a Capacitor shell (capacitor.config.ts) loading the live domain, with mobile-shell/ as offline fallback — web updates reach phones without store resubmission; native plugins must be guarded so the website works without them.
