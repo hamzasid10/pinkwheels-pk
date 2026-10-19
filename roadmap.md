@@ -9,3 +9,5 @@
 - [x] Open default rider signup/sign-in on booking while preserving history and role-specific navigation.
 - [x] Verify routing tests, guest protection and isolated mobile/desktop ride selection and contact editing.
 - [ ] Verify a real signed-in rider booking; awaiting preview sign-in, configured fares and a working Google Maps key on the test origin.
+- [x] Add iPhone safe-area spacing to shared page headers and the booking map layout.
+- [x] Verify the header with a simulated iPhone inset and normal browser spacing.
