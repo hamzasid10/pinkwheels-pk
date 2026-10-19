@@ -64,8 +64,8 @@ export function MobileMenu({ className }: { className?: string }) {
           <Menu className="h-6 w-6" />
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="flex w-[82vw] max-w-xs flex-col gap-0 bg-gradient-blush p-0">
-        <SheetHeader className="border-b bg-card/80 px-5 py-4 text-left">
+      <SheetContent side="left" className="flex w-[82vw] max-w-xs flex-col gap-0 bg-gradient-blush p-0 [&>button:first-child]:top-[calc(env(safe-area-inset-top)+1rem)]">
+        <SheetHeader className="border-b bg-card/80 px-5 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] text-left">
           <SheetTitle className="flex items-center gap-2 font-display text-xl">
             <img src={brandIcon} alt="" className="h-9 w-8 object-contain" /> Pink Wheel
           </SheetTitle>
