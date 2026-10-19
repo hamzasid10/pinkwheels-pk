@@ -128,13 +128,14 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
+  header { padding-top: env(safe-area-inset-top); }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
 
 /* The booking map remains unframed; route inputs and ride sheet float above it. */
 .rider-booking { height: 100dvh; overflow: hidden; }
-.rider-map-header { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px; position: relative; z-index: 40; }
-.rider-map-main { position: relative; height: calc(100dvh - 64px); }
+.rider-map-header { height: calc(64px + env(safe-area-inset-top)); display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: env(safe-area-inset-top) 16px 0; position: relative; z-index: 40; }
+.rider-map-main { position: relative; height: calc(100dvh - 64px - env(safe-area-inset-top)); }
 .rider-live-map { position: absolute; inset: 0; border-radius: 0; }
 .rider-booking-form { pointer-events: none; position: absolute; inset: 0; }
 .rider-addresses { pointer-events: auto; position: absolute; top: 16px; left: 16px; right: 16px; padding: 12px; border-radius: 16px; z-index: 30; }
@@ -142,7 +143,7 @@
 .rider-booking-action { padding-bottom: 4px; }
 .rider-trip-details[open] summary svg { transform: rotate(180deg); }
 @media (min-width: 768px) {
-  .rider-map-header { padding: 0 32px; }
+  .rider-map-header { padding: env(safe-area-inset-top) 32px 0; }
   .rider-addresses { width: 400px; right: auto; top: 24px; left: 24px; }
   .rider-ride-sheet { width: 420px; left: auto; right: 24px; bottom: 24px; max-height: calc(100dvh - 112px); padding: 24px; border-radius: 24px; }
 }
