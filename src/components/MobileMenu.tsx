@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
-  Bell, Car, CarFront, HelpCircle, Home, LayoutDashboard, LogIn, LogOut, Menu, Settings, ShieldCheck, User, Users, History,
+  Bell, Car, CarFront, HelpCircle, Home, LayoutDashboard, LogIn, LogOut, Menu, Moon, Settings, ShieldCheck, Sun, User, Users, History,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
