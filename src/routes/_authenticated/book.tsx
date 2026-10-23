@@ -218,7 +218,7 @@ function BookPage() {
             <div className="rider-booking-action mt-3 bg-card pt-2">
               <Button type="submit" size="lg" className="w-full" disabled={busy || !ready}>{busy ? "Finding riders…" : fare != null ? `Find Riders · ${pkr(fare)}` : "Find Riders"}</Button>
               {!ready && !busy && <details className="mt-2 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium text-primary">{routing ? "Finding your route…" : `Complete ${missing.length} required ${missing.length === 1 ? "detail" : "details"}`}</summary><ul className="mt-2 list-disc space-y-1 pl-4">{missing.map((m) => <li key={m}>{m}</li>)}</ul></details>}
-              {(phone || ec.data) && <p className="mt-2 text-[11px] text-muted-foreground">{ec.data ? <>Sharing your emergency contact {ec.data.name} with your driver.</> : phone ? <>Sharing your phone number with your driver.</> : <>Add your phone &amp; emergency contact on My rides for a safer trip.</>}</p>}
+              <p className="mt-2 text-[11px] text-muted-foreground">{ec.data ? <>Sharing your emergency contact {ec.data.name} with your driver.</> : phone ? <>Sharing your phone number with your driver.</> : <>Add your phone &amp; emergency contact on My rides for a safer trip.</>}</p>
               <div className="mt-3 flex items-center justify-between gap-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Verified female drivers</span><Link to="/safety" className="font-semibold text-primary">Safety</Link></div>
             </div>
           </section>
