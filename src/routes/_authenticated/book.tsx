@@ -121,14 +121,15 @@ function BookPage() {
     if (!inServiceArea(pickup) || !inServiceArea(drop)) return toast.error("We currently serve Lahore, Gujranwala, Islamabad and Rawalpindi only.");
     if (!info) return toast.error("Waiting for the route…");
     if (fare == null) return toast.error("Fares for this vehicle are not set yet.");
-    const parsed = schema.safeParse({ ...f, rider_name: name, rider_phone: phone });
-    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message);
     if (!me.data || busy) return;
     setBusy(true);
     const { data, error } = await supabase
       .from("ride_requests")
       .insert({
-        ...parsed.data, vehicle, fare, rider_id: me.data.user.id,
+        ride_date: f.ride_date, ride_time: f.ride_time,
+        rider_name: name, rider_phone: phone,
+        emergency_contact: ec.data ? `${ec.data.name} — ${ec.data.phone}` : "",
+        vehicle, fare, rider_id: me.data.user.id,
         pickup: pickup.address, destination: drop.address,
         pickup_lat: pickup.lat, pickup_lng: pickup.lng, dest_lat: drop.lat, dest_lng: drop.lng,
         pickup_place_id: pickup.placeId, dest_place_id: drop.placeId,
