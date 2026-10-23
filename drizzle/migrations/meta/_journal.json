@@ -92,6 +92,13 @@
       "when": 1792789615366,
       "tag": "0012_pin_verified_trip_start",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792789636677,
+      "tag": "0013_enforce_secure_trip_transitions",
+      "breakpoints": true
     }
   ]
 }
