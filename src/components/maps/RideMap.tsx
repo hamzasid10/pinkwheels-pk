@@ -4,13 +4,14 @@ import { MapPlaceholder } from "@/components/Brand";
 import { GoogleMap, type MapPin } from "@/components/maps/GoogleMap";
 import { supabase } from "@/integrations/supabase/client";
 import type { LatLng } from "@/lib/maps/cities";
+import { ACTIVE_DRIVER_STATUSES } from "@/lib/ride-dispatch";
 
 type RideLike = {
   id: string; pickup: string; destination: string; driver_id?: string | null; status?: string;
   pickup_lat?: number | null; pickup_lng?: number | null; dest_lat?: number | null; dest_lng?: number | null; route_polyline?: string | null;
 };
 
-const TRACKABLE = ["driver_assigned", "driver_arriving", "ride_started"];
+const TRACKABLE = ACTIVE_DRIVER_STATUSES;
 
 /** Map of a ride; when a driver is assigned it follows her live location. */
 export function RideMap({ ride, className = "h-60", track = true }: { ride: RideLike; className?: string; track?: boolean }) {
@@ -20,10 +21,11 @@ export function RideMap({ ride, className = "h-60", track = true }: { ride: Ride
 
   useEffect(() => {
     if (!live) { setDriverPos(null); return; }
-    const id = ride.driver_id!;
+    const id = ride.driver_id;
+    if (!id) return;
     supabase.from("driver_locations").select("lat,lng,updated_at").eq("driver_id", id).maybeSingle()
       .then(({ data }) => { if (data) { setDriverPos({ lat: data.lat, lng: data.lng }); setUpdated(data.updated_at); } });
-    const ch = supabase.channel(`loc-${ride.id}`)
+    const ch = supabase.channel(`loc-${ride.id}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "driver_locations", filter: `driver_id=eq.${id}` }, (p) => {
         const n = p.new as { lat: number; lng: number; updated_at: string };
         if (n?.lat != null) { setDriverPos({ lat: n.lat, lng: n.lng }); setUpdated(n.updated_at); }
@@ -46,7 +48,7 @@ export function RideMap({ ride, className = "h-60", track = true }: { ride: Ride
       <GoogleMap className={className} pins={pins} polyline={ride.route_polyline} fitKey={`${ride.id}-${!!driverPos}`} />
       {live && (
         <p className="mt-1.5 text-xs text-muted-foreground">
-          {driverPos ? `Driver location live · updated ${new Date(updated!).toLocaleTimeString("en-PK", { hour: "numeric", minute: "2-digit" })}` : "Waiting for the driver's live location…"}
+          {driverPos && updated ? `Driver location live · updated ${new Date(updated).toLocaleTimeString("en-PK", { hour: "numeric", minute: "2-digit" })}` : "Waiting for the driver's live location…"}
         </p>
       )}
     </div>
@@ -59,7 +61,9 @@ export function useShareLocation(driverId: string | undefined, enabled: boolean)
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     if (!enabled || !driverId || !("geolocation" in navigator)) return;
-    const watch = navigator.geolocation.watchPosition(async (pos) => {
+    last.current = 0;
+    let latest: GeolocationPosition | null = null;
+    const send = async (pos: GeolocationPosition) => {
       const now = Date.now();
       if (now - last.current < 10000) return;
       last.current = now;
@@ -68,11 +72,18 @@ export function useShareLocation(driverId: string | undefined, enabled: boolean)
         heading: pos.coords.heading, updated_at: new Date().toISOString(),
       });
       setError(e ? e.message : null);
-    }, (e) => {
+    };
+    const watch = navigator.geolocation.watchPosition((pos) => { latest = pos; void send(pos); }, (e) => {
+      latest = null;
       const msg = e.code === 1 ? "Location permission denied — riders can't see you on the map." : "Couldn't read your location.";
       setError(msg); toast.error(msg);
     }, { enableHighAccuracy: true, maximumAge: 5000 });
-    return () => navigator.geolocation.clearWatch(watch);
+    const heartbeat = setInterval(() => {
+      if (!latest || Date.now() - latest.timestamp > 60000) {
+        navigator.geolocation.getCurrentPosition((pos) => { latest = pos; void send(pos); }, () => { latest = null; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 8000 });
+      } else void send(latest);
+    }, 10000);
+    return () => { clearInterval(heartbeat); navigator.geolocation.clearWatch(watch); };
   }, [enabled, driverId]);
   return error;
 }

@@ -2,7 +2,7 @@ import { RateTrip, RiderPoolSection } from "@/components/Pool";
 import { ModeCard } from "@/components/ModeSwitch";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Car, Clock, Headphones, History, MapPin, Phone, Plus, Trash2, User } from "lucide-react";
 import { AppShell, Panel, SafetyActions, StatusPill, StatusTrack } from "@/components/Brand";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { pkr, useMe, type RideStatus } from "@/lib/pink";
+import { TERMINAL_RIDE_STATUSES } from "@/lib/ride-dispatch";
 
 export const Route = createFileRoute("/_authenticated/rider")({
   head: () => ({ meta: [{ title: "My Rides — Pink Wheel" }, { name: "description", content: "Your Pink Wheel rider dashboard." }, { property: "og:title", content: "My Rides — Pink Wheel" }, { property: "og:description", content: "Your Pink Wheel rider dashboard." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -46,11 +47,17 @@ function RiderDashboard() {
   const [ec, setEc] = useState({ name: "", phone: "" });
   const [help, setHelp] = useState("");
   const [prof, setProf] = useState<{ full_name: string; phone: string } | null>(null);
+  useEffect(() => {
+    if (!uid) return;
+    const ch = supabase.channel(`rider-history-${uid}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ride_requests", filter: `rider_id=eq.${uid}` }, () => { void qc.invalidateQueries({ queryKey: ["my-rides", uid] }); }).subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [uid, qc]);
 
   if (me.data?.profile?.suspended) return <AppShell title="Account suspended"><Panel>Your account is suspended. Please contact support.</Panel></AppShell>;
 
   const all = rides.data ?? [];
-  const upcoming = all.find((r) => !["completed", "cancelled"].includes(r.status));
+  const upcoming = all.find((r) => !TERMINAL_RIDE_STATUSES.includes(r.status));
   const history = all.filter((r) => r !== upcoming);
   const firstName = (me.data?.profile?.full_name || "there").split(" ")[0];
   const p = prof ?? { full_name: me.data?.profile?.full_name ?? "", phone: me.data?.profile?.phone ?? "" };
@@ -99,7 +106,7 @@ function RiderDashboard() {
                 </div>
               )}
               <SafetyActions rideId={upcoming.id} shareText={`My Pink Wheel ride ${upcoming.booking_code}: ${upcoming.pickup} → ${upcoming.destination}. Driver: ${upcoming.driver_name ?? "being assigned"}. Status: ${upcoming.status}`} />
-              {["requested", "driver_assigned", "driver_arriving"].includes(upcoming.status) && (
+              {["requested", "searching", "offered", "driver_assigned", "accepted", "driver_arriving", "arrived"].includes(upcoming.status) && (
                 <Button variant="ghost" className="w-full text-destructive" onClick={() => cancel(upcoming.id)}>Cancel ride</Button>
               )}
             </div>

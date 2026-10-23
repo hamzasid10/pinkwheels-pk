@@ -94,14 +94,15 @@ export function StatusPill({ status }: { status: RideStatus }) {
   const tone =
     status === "completed"
       ? "bg-success/15 text-success"
-      : status === "cancelled"
+      : status === "cancelled" || status === "expired"
         ? "bg-destructive/10 text-destructive"
         : "bg-accent text-accent-foreground";
   return <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-semibold", tone)}>{STATUS_LABEL[status]}</span>;
 }
 
 export function StatusTrack({ status }: { status: RideStatus }) {
-  const idx = STATUS_FLOW.indexOf(status);
+  const canonical = ({ searching: "requested", offered: "requested", accepted: "driver_assigned", arrived: "driver_arriving", in_progress: "ride_started" } as Partial<Record<RideStatus, RideStatus>>)[status] ?? status;
+  const idx = STATUS_FLOW.indexOf(canonical);
   return (
     <ol className="flex gap-1.5">
       {STATUS_FLOW.map((s, i) => (

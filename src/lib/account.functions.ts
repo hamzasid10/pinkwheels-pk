@@ -14,13 +14,14 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     const gone = "Deleted user";
 
     // Cancel anything still in progress
-    await db.from("ride_requests").update({ status: "cancelled" }).eq("rider_id", uid).in("status", ["requested", "driver_assigned", "driver_arriving"]);
+    await db.from("ride_requests").update({ status: "cancelled" }).eq("rider_id", uid).in("status", ["requested", "searching", "offered", "driver_assigned", "accepted", "driver_arriving", "arrived"]);
     await db.from("pool_seat_requests").update({ request_status: "cancelled" }).eq("rider_id", uid).in("request_status", ["pending", "accepted"]);
     await db.from("pool_routes").update({ status: "cancelled" }).eq("driver_id", uid).in("status", ["open", "almost_full", "full"]);
 
     // Remove personal details from past trips
     await db.from("ride_requests").update({ rider_name: gone, rider_phone: "", emergency_contact: "" }).eq("rider_id", uid);
     await db.from("ride_requests").update({ driver_name: gone, driver_phone: "" }).eq("driver_id", uid);
+    await db.from("ride_requests").update({ status: "cancelled" }).eq("driver_id", uid).in("status", ["driver_assigned", "accepted", "driver_arriving", "arrived"]);
     await db.from("pool_seat_requests").update({ rider_first_name: gone, emergency_contact: "" }).eq("rider_id", uid);
     await db.from("pool_routes").update({ driver_first_name: gone }).eq("driver_id", uid);
 

@@ -8,6 +8,7 @@ import { AdminFares, AdminLiveMap } from "@/components/maps/AdminMaps";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { pkr, STATUS_LABEL, useMe, type RideStatus } from "@/lib/pink";
+import { SEARCHING_STATUSES, TERMINAL_RIDE_STATUSES } from "@/lib/ride-dispatch";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Pink Wheel" }, { name: "description", content: "Pink Wheel admin panel." }, { property: "og:title", content: "Admin — Pink Wheel" }, { property: "og:description", content: "Pink Wheel admin panel." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -60,7 +61,7 @@ function AdminPage() {
   const stats = [
     ["Total riders", riders.length], ["Total drivers", d.drivers.length],
     ["Pending applications", d.drivers.filter((x) => x.status === "pending").length],
-    ["Active rides", d.rides.filter((r) => !["completed", "cancelled"].includes(r.status)).length],
+    ["Active rides", d.rides.filter((r) => !TERMINAL_RIDE_STATUSES.includes(r.status)).length],
     ["Completed rides", d.rides.filter((r) => r.status === "completed").length],
     ["Cancelled rides", d.rides.filter((r) => r.status === "cancelled").length],
   ];
@@ -108,7 +109,7 @@ function AdminPage() {
                   run(supabase.from("ride_requests").update({
                     driver_id: dr.user_id, driver_name: dr.full_name, driver_phone: dr.phone,
                     driver_vehicle: v ? `${v.make_model} · ${v.reg_no}` : null,
-                    status: r.status === "requested" ? "driver_assigned" : r.status,
+                    status: SEARCHING_STATUSES.includes(r.status) ? "driver_assigned" : r.status,
                   }).eq("id", r.id), "Driver assigned");
                 }}>
                   <option value="">Assign driver…</option>

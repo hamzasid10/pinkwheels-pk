@@ -7,9 +7,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { useMe } from "@/lib/pink";
+import { useMe, type RideStatus } from "@/lib/pink";
 import { driverGate, effectiveMode, hasActiveTrip, MODE_KEY, SESSION_KEY, type AppMode } from "@/lib/mode";
 import { cn } from "@/lib/utils";
+import { ACTIVE_DRIVER_STATUSES } from "@/lib/ride-dispatch";
 
 const listeners = new Set<() => void>();
 
@@ -25,10 +26,19 @@ export function useMode() {
   }, []);
   const driver = useQuery({
     queryKey: ["mode-driver", uid], enabled: !!uid,
-    queryFn: async () => (await supabase.from("drivers").select("status, online").eq("user_id", uid!).maybeSingle()).data,
+    queryFn: async () => { if (!uid) return null; const { data, error } = await supabase.from("drivers").select("status, online, current_mode").eq("user_id", uid).maybeSingle(); if (error) throw error; return data; },
   });
   const gate = driverGate(driver.data?.status, !!me.data?.profile?.suspended);
-  const mode = effectiveMode(stored, gate);
+  const mode = effectiveMode(driver.data?.current_mode === "driver" ? "driver" : driver.data ? "passenger" : stored, gate);
+  useEffect(() => {
+    if (!uid) return;
+    const channel = supabase.channel(`mode-${uid}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "drivers", filter: `user_id=eq.${uid}` }, () => {
+        void qc.invalidateQueries({ queryKey: ["mode-driver", uid] });
+        void qc.invalidateQueries({ queryKey: ["driver", uid] });
+      }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [uid, qc]);
 
   // New app session: always start offline for safety.
   useEffect(() => {
@@ -38,7 +48,14 @@ export function useMode() {
   }, [uid, driver.data?.online, qc]);
   useEffect(() => { if (uid && driver.isFetched) sessionStorage.setItem(SESSION_KEY, "1"); }, [uid, driver.isFetched]);
 
-  function save(m: AppMode) { localStorage.setItem(MODE_KEY, m); listeners.forEach((l) => l()); }
+  async function save(m: AppMode) {
+    if (uid && driver.data) {
+      const { error } = await supabase.from("drivers").update({ current_mode: m, ...(m === "passenger" ? { online: false } : {}) }).eq("user_id", uid);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["mode-driver", uid] });
+    }
+    localStorage.setItem(MODE_KEY, m); listeners.forEach((l) => l());
+  }
 
   async function goOffline() {
     if (uid && driver.data?.online) { await supabase.from("drivers").update({ online: false }).eq("user_id", uid); qc.invalidateQueries(); }
@@ -47,7 +64,7 @@ export function useMode() {
   async function activeTrip() {
     if (!uid) return false;
     const [r, p] = await Promise.all([
-      supabase.from("ride_requests").select("status").eq("driver_id", uid).in("status", ["driver_arriving", "ride_started"]),
+      supabase.from("ride_requests").select("status").eq("driver_id", uid).in("status", ACTIVE_DRIVER_STATUSES as RideStatus[]),
       supabase.from("pool_routes").select("status").eq("driver_id", uid).eq("status", "started"),
     ]);
     return hasActiveTrip((r.data ?? []).map((x) => x.status), (p.data ?? []).map((x) => x.status));
@@ -74,17 +91,19 @@ export function useModeSwitch() {
     if (busy || target === m.mode) return;
     if (target === "driver") {
       if (m.gate !== "approved") return setDialog(m.gate);
-      m.save("driver");
-      navigate({ to: "/driver" });
+      setBusy(true);
+      try { await m.save("driver"); navigate({ to: "/driver" }); }
+      catch (error) { toast.error(error instanceof Error ? error.message : "Couldn't switch modes"); }
+      finally { setBusy(false); }
       return;
     }
     setBusy(true);
     try {
       if (await m.activeTrip()) return toast.error("Complete your current trip before switching modes.");
       await m.goOffline();
-      m.save("passenger");
+      await m.save("passenger");
       navigate({ to: "/book" });
-    } finally { setBusy(false); }
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Couldn't switch modes"); } finally { setBusy(false); }
   }
 
   const ui = (

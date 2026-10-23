@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Vehicle = "car" | "scooty" | "bike";
 export type RideStatus =
+  | "searching" | "offered" | "accepted" | "arrived" | "in_progress" | "expired"
   | "requested"
   | "driver_assigned"
   | "driver_arriving"
@@ -17,6 +18,7 @@ export const VEHICLES: { id: Vehicle; label: string; desc: string; base: number;
 ];
 
 export const STATUS_LABEL: Record<RideStatus, string> = {
+  searching: "Finding your driver", offered: "Finding your driver", accepted: "Driver accepted", arrived: "Driver arrived", in_progress: "Ride started", expired: "Search expired",
   requested: "Looking for a verified female driver",
   driver_assigned: "Driver assigned",
   driver_arriving: "Driver arriving",
