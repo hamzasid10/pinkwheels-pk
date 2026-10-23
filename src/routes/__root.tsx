@@ -100,6 +100,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: appleTouchIcon.url, sizes: "180x180" },
       { rel: "manifest", href: "/manifest.webmanifest" },
     ],
+    scripts: [
+      {
+        // Apply the saved dark-mode preference before first paint to avoid a light flash.
+        children:
+          'try{var t=localStorage.getItem("pw-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}',
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
