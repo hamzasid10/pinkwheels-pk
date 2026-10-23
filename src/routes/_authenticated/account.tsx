@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ModeCard } from "@/components/ModeSwitch";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
@@ -52,6 +53,8 @@ function Account() {
 
   return (
     <AppShell title="Account & settings">
+      <h2 className="mb-2 font-sans text-sm font-bold uppercase tracking-wider text-muted-foreground">Current mode · Switch mode</h2>
+      <ModeCard className="mb-5" />
       {target && kind ? (
         <Panel className="mx-auto max-w-md">
           <OtpVerify target={target} onVerify={verify} onResend={() => send(kind, target)} onChange={() => setTarget(null)}

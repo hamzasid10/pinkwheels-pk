@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DriverPoolSection } from "@/components/Pool";
 import { DriverProfile } from "@/components/DriverProfile";
 import { pkr, useMe, type RideStatus } from "@/lib/pink";
+import { ModeCard } from "@/components/ModeSwitch";
 
 export const Route = createFileRoute("/_authenticated/driver")({
   head: () => ({ meta: [{ title: "Driver Profile — Pink Wheel" }, { name: "description", content: "Your verified driver profile, real trip earnings and ride controls." }, { property: "og:title", content: "Driver Profile — Pink Wheel" }, { property: "og:description", content: "Your verified driver profile, real trip earnings and ride controls." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -71,7 +72,8 @@ function DriverDashboard() {
 
   return (
     <AppShell title="Driver profile">
-      <DriverProfile driver={d} rides={all} docs={docs.data ?? []} sharing={!!sharing} suspended={!!me.data?.profile?.suspended} onOnline={toggleOnline} />
+      <ModeCard className="mx-auto mb-5 max-w-3xl" />
+      <div id="driver-earnings" className="scroll-mt-24"><DriverProfile driver={d} rides={all} docs={docs.data ?? []} sharing={!!sharing} suspended={!!me.data?.profile?.suspended} onOnline={toggleOnline} /></div>
       <div id="driver-safety" className="mx-auto mb-7 max-w-3xl scroll-mt-24">
         <h2 className="mb-3 font-sans text-sm font-bold">Safety & location</h2>
         <Panel>
