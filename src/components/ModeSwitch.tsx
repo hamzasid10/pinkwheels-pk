@@ -91,8 +91,8 @@ export function useModeSwitch() {
     <AlertDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{dialog && GATE_COPY[dialog].title}</AlertDialogTitle>
-          <AlertDialogDescription>{dialog && GATE_COPY[dialog].body}</AlertDialogDescription>
+          <AlertDialogTitle>{dialog && GATE_COPY[dialog]?.title}</AlertDialogTitle>
+          <AlertDialogDescription>{dialog && GATE_COPY[dialog]?.body}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{dialog === "not_applied" ? "Cancel" : "Close"}</AlertDialogCancel>
@@ -165,7 +165,7 @@ export function BottomNav() {
       <ul className="grid grid-cols-5">
         {items.map((it) => (
           <li key={it.label}>
-            <Link to={it.to} hash={it.hash} activeOptions={{ includeHash: !!it.hash, exact: true }}
+            <Link to={it.to} {...(it.hash ? { hash: it.hash } : {})} activeOptions={{ includeHash: !!it.hash, exact: true }}
               className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-muted-foreground data-[status=active]:text-primary">
               <it.icon className="h-5 w-5" />{it.label}
             </Link>
