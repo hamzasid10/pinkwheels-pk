@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          dispatch_radius_km: number
           id: number
           pool_fee_type: string
           pool_fee_value: number
           updated_at: string
         }
         Insert: {
+          dispatch_radius_km?: number
           id?: number
           pool_fee_type?: string
           pool_fee_value?: number
           updated_at?: string
         }
         Update: {
+          dispatch_radius_km?: number
           id?: number
           pool_fee_type?: string
           pool_fee_value?: number
@@ -146,6 +149,7 @@ export type Database = {
           city: string
           cnic: string
           created_at: string
+          current_mode: string
           date_of_birth: string | null
           email: string
           emergency_contact: string | null
@@ -173,6 +177,7 @@ export type Database = {
           city: string
           cnic: string
           created_at?: string
+          current_mode?: string
           date_of_birth?: string | null
           email: string
           emergency_contact?: string | null
@@ -200,6 +205,7 @@ export type Database = {
           city?: string
           cnic?: string
           created_at?: string
+          current_mode?: string
           date_of_birth?: string | null
           email?: string
           emergency_contact?: string | null
@@ -560,6 +566,54 @@ export type Database = {
           },
         ]
       }
+      ride_offers: {
+        Row: {
+          driver_id: string
+          expires_at: string
+          id: string
+          offered_at: string
+          pickup_distance_km: number
+          responded_at: string | null
+          ride_request_id: string
+          status: string
+        }
+        Insert: {
+          driver_id: string
+          expires_at?: string
+          id?: string
+          offered_at?: string
+          pickup_distance_km: number
+          responded_at?: string | null
+          ride_request_id: string
+          status?: string
+        }
+        Update: {
+          driver_id?: string
+          expires_at?: string
+          id?: string
+          offered_at?: string
+          pickup_distance_km?: number
+          responded_at?: string | null
+          ride_request_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_offers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ride_offers_ride_request_id_fkey"
+            columns: ["ride_request_id"]
+            isOneToOne: false
+            referencedRelation: "ride_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ride_requests: {
         Row: {
           booking_code: string
@@ -572,6 +626,9 @@ export type Database = {
           driver_id: string | null
           driver_name: string | null
           driver_phone: string | null
+          driver_photo_url: string | null
+          driver_plate: string | null
+          driver_rating: number | null
           driver_vehicle: string | null
           duration_min: number | null
           emergency_contact: string
@@ -603,6 +660,9 @@ export type Database = {
           driver_id?: string | null
           driver_name?: string | null
           driver_phone?: string | null
+          driver_photo_url?: string | null
+          driver_plate?: string | null
+          driver_rating?: number | null
           driver_vehicle?: string | null
           duration_min?: number | null
           emergency_contact: string
@@ -634,6 +694,9 @@ export type Database = {
           driver_id?: string | null
           driver_name?: string | null
           driver_phone?: string | null
+          driver_photo_url?: string | null
+          driver_plate?: string | null
+          driver_rating?: number | null
           driver_vehicle?: string | null
           duration_min?: number | null
           emergency_contact?: string
@@ -769,12 +832,29 @@ export type Database = {
     }
     Functions: {
       can_share_location: { Args: { _user: string }; Returns: boolean }
+      dispatch_ride_internal: { Args: { _ride: string }; Returns: number }
+      dispatch_tick: { Args: { _ride?: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      incoming_ride_offers: {
+        Args: never
+        Returns: {
+          destination: string
+          distance_km: number
+          duration_min: number
+          expires_at: string
+          fare: number
+          id: string
+          pickup: string
+          pickup_distance_km: number
+          ride_request_id: string
+          vehicle: Database["public"]["Enums"]["vehicle_kind"]
+        }[]
       }
       is_pool_driver: {
         Args: { _route: string; _user: string }
@@ -787,6 +867,10 @@ export type Database = {
           lng: number
           vehicle: Database["public"]["Enums"]["vehicle_kind"]
         }[]
+      }
+      respond_ride_offer: {
+        Args: { _accept: boolean; _offer: string }
+        Returns: string
       }
       rider_can_track: {
         Args: { _driver: string; _rider: string }
