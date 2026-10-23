@@ -7,6 +7,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/lib/pink";
+import { useMode } from "@/components/ModeSwitch";
 import { cn } from "@/lib/utils";
 import brandIcon from "@/assets/pink-wheel-icon.png";
 
@@ -28,16 +29,23 @@ export function MobileMenu({ className }: { className?: string }) {
   });
   const approved = driver.data === "approved";
   const isAdmin = user?.role === "admin";
+  const { mode } = useMode();
+  const driverMode = mode === "driver";
 
-  const items: Item[] = [
+  const items: Item[] = driverMode ? [
+    { label: "Driver Home", to: "/driver", icon: LayoutDashboard, auth: true },
+    { label: "Offer My Route", to: "/offer", icon: Users, auth: true },
+    ...(isAdmin ? [{ label: "Admin Dashboard", to: "/admin", icon: ShieldCheck, auth: true }] : []),
+    { label: "Profile & Mode", to: "/account", icon: User, auth: true },
+    { label: "Driver Support", to: "/contact", icon: HelpCircle },
+  ] : [
     { label: "Home", to: "/", icon: Home },
     { label: "Book a Ride", to: "/book", icon: Car, auth: true },
     { label: "My Rides", to: "/rider", icon: History, auth: true },
     { label: "Pink Pool (Shared Rides)", to: "/pool", icon: Users, auth: true },
     ...(!approved ? [{ label: "Become a Driver", to: "/driver-register", icon: CarFront, auth: true }] : []),
-    ...(approved ? [{ label: "Driver Dashboard", to: "/driver", icon: LayoutDashboard, auth: true }] : []),
     ...(isAdmin ? [{ label: "Admin Dashboard", to: "/admin", icon: ShieldCheck, auth: true }] : []),
-    { label: "My Profile", to: user?.role === "driver" || driver.data ? "/driver" : "/account", icon: User, auth: true },
+    { label: "My Profile", to: "/account", icon: User, auth: true },
     { label: "Notifications", to: "/rider", icon: Bell, auth: true },
     { label: "Help & Support", to: "/contact", icon: HelpCircle },
     { label: "Settings", to: "/account", icon: Settings, auth: true },

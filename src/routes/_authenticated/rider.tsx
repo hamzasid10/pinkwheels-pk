@@ -63,6 +63,7 @@ function RiderDashboard() {
 
   return (
     <AppShell title={`Hi, ${firstName}`}>
+      <ModeCard className="mb-5" />
       <div className="grid gap-5 md:grid-cols-2">
         <div className="rounded-2xl bg-gradient-rose p-6 text-primary-foreground shadow-glow md:col-span-2">
           <p className="text-sm opacity-90">Where are you going today?</p>

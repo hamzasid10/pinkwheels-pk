@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import fullLogo from "@/assets/pink-wheel-full.png.asset.json";
 import brandIcon from "@/assets/pink-wheel-icon.png";
 import { MobileMenu } from "@/components/MobileMenu";
+import { BottomNav, ModeToggle } from "@/components/ModeSwitch";
 
 export function Logo({ className, variant = "compact" }: { className?: string; variant?: "compact" | "full" }) {
   return (
@@ -48,6 +49,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div className="flex min-w-0 items-center gap-1"><MobileMenu className="-ml-2" /><Logo /></div>
           <div className="flex items-center gap-1">
+          <ModeToggle className="hidden sm:flex" />
           <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/account" })}>Account</Button>
           <Button
             variant="ghost"
@@ -64,10 +66,12 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-5xl px-4 py-6 pb-24 md:pb-6">
+        <ModeToggle className="mb-4 w-fit sm:hidden" />
         <h1 className="mb-5 text-3xl font-semibold">{title}</h1>
         {children}
       </main>
+      <BottomNav />
     </div>
   );
 }
