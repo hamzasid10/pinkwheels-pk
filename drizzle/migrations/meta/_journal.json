@@ -85,6 +85,13 @@
       "when": 1792789529692,
       "tag": "0011_dispatch_eligibility_reconciliation",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792789615366,
+      "tag": "0012_pin_verified_trip_start",
+      "breakpoints": true
     }
   ]
 }

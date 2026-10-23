@@ -876,6 +876,10 @@ export type Database = {
         Args: { _driver: string; _rider: string }
         Returns: boolean
       }
+      start_assigned_ride: {
+        Args: { _pin: string; _ride: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "driver" | "rider"
