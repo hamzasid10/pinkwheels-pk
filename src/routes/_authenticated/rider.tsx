@@ -1,4 +1,5 @@
 import { RateTrip, RiderPoolSection } from "@/components/Pool";
+import { ModeCard } from "@/components/ModeSwitch";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
