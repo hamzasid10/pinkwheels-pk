@@ -13,10 +13,14 @@ export function loadGoogleMaps(): Promise<any> {
   if (window.google?.maps?.Map) return Promise.resolve(window.google);
   if (loader) return loader;
   const env = import.meta.env as Record<string, string | undefined>;
-  const key = env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"];
   const channel = env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID"] ?? "";
-  if (!key) return Promise.reject(new Error("Map key missing"));
-  loader = new Promise((resolve, reject) => {
+  const host = window.location.hostname;
+  const lovableHost = /(\.lovable\.app|\.lovableproject\.com|^localhost)$/.test(host) || host === "localhost";
+  const keyPromise: Promise<string | null | undefined> = lovableHost
+    ? Promise.resolve(env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"])
+    : import("@/lib/maps/browser-key.functions").then((m) => m.getMapsBrowserKey()).then((r) => r.key ?? env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"]);
+  loader = keyPromise.then((key) => new Promise((resolve, reject) => {
+    if (!key) { loader = null; reject(new Error("Map key missing")); return; }
     window.__pwMapsInit = () => resolve(window.google);
     const s = document.createElement("script");
     s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__pwMapsInit&channel=${channel}&region=PK&language=en`;
