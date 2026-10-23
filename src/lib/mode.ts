@@ -1,3 +1,4 @@
+import { ACTIVE_DRIVER_STATUSES } from "./ride-dispatch";
 export type AppMode = "passenger" | "driver";
 export type DriverGate = "not_applied" | "pending" | "approved" | "rejected" | "suspended";
 
@@ -17,7 +18,7 @@ export function effectiveMode(stored: AppMode | null, gate: DriverGate): AppMode
 
 /** A driver with an active ride or a started pool trip must finish it before leaving Driver Mode. */
 export function hasActiveTrip(rideStatuses: string[], poolStatuses: string[]) {
-  return rideStatuses.some((s) => s === "driver_arriving" || s === "ride_started") || poolStatuses.includes("started");
+  return rideStatuses.some((s) => ACTIVE_DRIVER_STATUSES.includes(s)) || poolStatuses.includes("started");
 }
 
 export const MODE_KEY = "pw-mode";
