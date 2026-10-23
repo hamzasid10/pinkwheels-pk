@@ -18,6 +18,7 @@ import rideCar from "@/assets/ride-car.png";
 import rideScooty from "@/assets/ride-scooty.png";
 import rideBike from "@/assets/ride-bike.png";
 import { dispatchLog, SEARCHING_STATUSES, TERMINAL_RIDE_STATUSES } from "@/lib/ride-dispatch";
+import { assignedDriverPhoto } from "@/lib/ride-driver.functions";
 
 const vehicleImages = { car: rideCar, scooty: rideScooty, bike: rideBike };
 
@@ -41,6 +42,7 @@ function BookPage() {
   const route = useServerFn(computeRoute);
   const rev = useServerFn(reverseGeocode);
   const nearby = useServerFn(nearbyDrivers);
+  const photoFn = useServerFn(assignedDriverPhoto);
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   const [vehicle, setVehicle] = useState<Vehicle>("car");
@@ -64,6 +66,18 @@ function BookPage() {
     queryFn: async () => { if (!uid) return null; return (await supabase.from("emergency_contacts").select("name, phone").eq("user_id", uid).order("created_at").limit(1)).data?.[0] ?? null; },
   });
   const mode = vehicle === "car" ? "DRIVE" : "TWO_WHEELER";
+  const assignedDetails = useQuery({
+    queryKey: ["assigned-driver-details", booked?.id, booked?.driver_id],
+    enabled: !!booked?.driver_id && !!booked && !TERMINAL_RIDE_STATUSES.includes(booked.status),
+    staleTime: 240000,
+    queryFn: async () => {
+      if (!booked?.driver_id || booked.pickup_lat == null || booked.pickup_lng == null) return null;
+      const photo = await photoFn({ data: { rideId: booked.id } }).catch(() => null);
+      const { data: location } = await supabase.from("driver_locations").select("lat,lng").eq("driver_id", booked.driver_id).maybeSingle();
+      const eta = location ? await route({ data: { from: location, to: { lat: booked.pickup_lat, lng: booked.pickup_lng }, mode: booked.vehicle === "car" ? "DRIVE" : "TWO_WHEELER" } }).then((r) => r.durationMin).catch(() => null) : null;
+      return { photo, eta };
+    },
+  });
 
   useEffect(() => {
     if (!pickup || !drop) { setInfo(null); setRouting(false); return; }
@@ -228,8 +242,8 @@ function BookPage() {
                   <h2 className="font-sans text-lg font-bold">{booked.status === "completed" ? "Ride completed" : ["ride_started", "in_progress"].includes(booked.status) ? "Your ride is underway" : booked.status === "arrived" ? "Your driver has arrived" : booked.status === "driver_assigned" ? "Driver assigned · awaiting acceptance" : "Your driver is on the way"}</h2>
                   <div className="mt-1"><StatusPill status={booked.status} /></div>
                   {booked.driver_name && <div className="mt-3 flex items-center gap-3 text-sm">
-                    {booked.driver_photo_url ? <img src={booked.driver_photo_url} alt="Your driver" className="h-10 w-10 rounded-full object-cover" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-accent"><User className="h-5 w-5 text-primary" /></span>}
-                    <div className="min-w-0 flex-1"><p className="font-semibold">{booked.driver_name} · Verified</p><p className="text-xs text-muted-foreground">{booked.driver_vehicle} · {booked.driver_plate}</p><p className="text-xs text-muted-foreground">{booked.driver_rating != null ? `${booked.driver_rating} ★` : "Not rated yet"}</p></div>
+                    {assignedDetails.data?.photo ? <img src={assignedDetails.data.photo} alt="Your driver" className="h-10 w-10 rounded-full object-cover" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-accent"><User className="h-5 w-5 text-primary" /></span>}
+                    <div className="min-w-0 flex-1"><p className="font-semibold">{booked.driver_name} · Verified</p><p className="text-xs text-muted-foreground">{booked.driver_vehicle} · {booked.driver_plate}</p><p className="text-xs text-muted-foreground">{booked.driver_rating != null ? `${booked.driver_rating} ★` : "Not rated yet"}{assignedDetails.data?.eta != null && ["accepted", "driver_arriving"].includes(booked.status) ? ` · about ${assignedDetails.data.eta} min to pickup` : ""}</p></div>
                     {booked.driver_phone && <><Button size="icon" variant="outline" asChild><a aria-label="Call driver" href={`tel:${booked.driver_phone}`}><Phone /></a></Button><Button size="icon" variant="outline" asChild><a aria-label="Message driver" href={`sms:${booked.driver_phone}`}><MessageCircle /></a></Button></>}
                   </div>}
                 </div>

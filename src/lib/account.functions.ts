@@ -21,6 +21,7 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     // Remove personal details from past trips
     await db.from("ride_requests").update({ rider_name: gone, rider_phone: "", emergency_contact: "" }).eq("rider_id", uid);
     await db.from("ride_requests").update({ driver_name: gone, driver_phone: "" }).eq("driver_id", uid);
+    await db.from("ride_requests").update({ status: "cancelled" }).eq("driver_id", uid).in("status", ["driver_assigned", "accepted", "driver_arriving", "arrived"]);
     await db.from("pool_seat_requests").update({ rider_first_name: gone, emergency_contact: "" }).eq("rider_id", uid);
     await db.from("pool_routes").update({ driver_first_name: gone }).eq("driver_id", uid);
 

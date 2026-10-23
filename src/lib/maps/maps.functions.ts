@@ -85,7 +85,8 @@ export const nearbyDrivers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => latLng.parse(d))
   .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase.rpc("nearby_drivers", { _lat: data.lat, _lng: data.lng, _radius_km: 8 });
+    const { data: setting } = await context.supabase.from("app_settings").select("dispatch_radius_km").limit(1).maybeSingle();
+    const { data: rows, error } = await context.supabase.rpc("nearby_drivers", { _lat: data.lat, _lng: data.lng, _radius_km: setting?.dispatch_radius_km ?? 10 });
     if (error) throw new Error(error.message);
     return rows ?? [];
   });
