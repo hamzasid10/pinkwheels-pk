@@ -94,6 +94,16 @@ export function MobileMenu({ className }: { className?: string }) {
               </li>
             ))}
           </ul>
+          <div className="mt-2 border-t pt-2">
+            <button type="button" onClick={toggleTheme} aria-pressed={theme === "dark"}
+              className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold transition hover:bg-card active:bg-accent">
+              {theme === "dark" ? <Sun className="h-5 w-5 shrink-0 text-primary" /> : <Moon className="h-5 w-5 shrink-0 text-primary" />}
+              Dark Mode
+              <span className={cn("ml-auto h-5 w-9 rounded-full p-0.5 transition", theme === "dark" ? "bg-primary" : "bg-input")}>
+                <span className={cn("block h-4 w-4 rounded-full bg-card shadow-sm transition-transform", theme === "dark" && "translate-x-4")} />
+              </span>
+            </button>
+          </div>
         </nav>
         <div className="border-t bg-card/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {user ? (
