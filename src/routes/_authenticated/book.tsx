@@ -113,10 +113,6 @@ function BookPage() {
   if (pickup && !inServiceArea(pickup)) missing.push("Pickup must be in Lahore, Gujranwala, Islamabad or Rawalpindi");
   if (drop && !inServiceArea(drop)) missing.push("Drop-off must be in Lahore, Gujranwala, Islamabad or Rawalpindi");
   if (info && !fares.isLoading && fare == null) missing.push(`Fare — prices for ${vLabel} haven't been set by Pink Wheel yet`);
-  if (!f.ride_date || !f.ride_time) missing.push("Date and time");
-  if (name.trim().length < 2) missing.push("Rider name");
-  if (phone.trim().length < 7) missing.push("Phone number");
-  if (f.emergency_contact.trim().length < 7) missing.push("Emergency contact (name & phone)");
   const ready = missing.length === 0 && !routing && !!info && fare != null && !!me.data;
 
   async function submit(e: React.FormEvent) {
