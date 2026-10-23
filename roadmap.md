@@ -1,3 +1,5 @@
+- [ ] Fix nearby ride offers, persisted mode, eligibility, realtime delivery and atomic acceptance.
+- [ ] Test dispatch, decline, expiry, concurrency and passenger/driver updates.
 - [x] Prepare full logo and compact icon from the supplied artwork.
 - [x] Apply branding to headers, sign-in, landing, About, and loading screens.
 - [x] Add favicon and home-screen icons with safe padding.
