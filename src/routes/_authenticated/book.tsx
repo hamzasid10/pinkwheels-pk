@@ -215,21 +215,10 @@ function BookPage() {
               })}
             </div>
             <Button variant="ghost" className="mt-2 w-full justify-between rounded-xl border-t text-sm" asChild><Link to="/pool"><span className="flex items-center gap-2"><Users className="text-primary" /> Pink Pool · Shared rides</span><RouteIcon /></Link></Button>
-            <details className="rider-trip-details mt-3 border-t pt-3">
-              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold">Trip & contact details<ChevronDown className="h-4 w-4 text-muted-foreground" /></summary>
-              <div className="mt-3 space-y-3 pb-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label htmlFor="ride-date">Date</Label><Input id="ride-date" type="date" min={today} value={f.ride_date} onChange={set("ride_date")} /></div>
-                  <div><Label htmlFor="ride-time">Time</Label><Input id="ride-time" type="time" value={f.ride_time} onChange={set("ride_time")} /></div>
-                </div>
-                <div><Label htmlFor="rider-name">Rider name</Label><Input id="rider-name" value={name} onChange={set("rider_name")} /></div>
-                <div><Label htmlFor="rider-phone">Phone number</Label><Input id="rider-phone" type="tel" value={phone} onChange={set("rider_phone")} /></div>
-                <div><Label htmlFor="emergency-contact">Emergency contact (name & phone)</Label><Input id="emergency-contact" value={f.emergency_contact} onChange={set("emergency_contact")} placeholder="Ammi — 0300 1234567" /></div>
-              </div>
-            </details>
             <div className="rider-booking-action mt-3 bg-card pt-2">
               <Button type="submit" size="lg" className="w-full" disabled={busy || !ready}>{busy ? "Finding riders…" : fare != null ? `Find Riders · ${pkr(fare)}` : "Find Riders"}</Button>
               {!ready && !busy && <details className="mt-2 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium text-primary">{routing ? "Finding your route…" : `Complete ${missing.length} required ${missing.length === 1 ? "detail" : "details"}`}</summary><ul className="mt-2 list-disc space-y-1 pl-4">{missing.map((m) => <li key={m}>{m}</li>)}</ul></details>}
+              {(phone || ec.data) && <p className="mt-2 text-[11px] text-muted-foreground">{ec.data ? <>Sharing your emergency contact {ec.data.name} with your driver.</> : phone ? <>Sharing your phone number with your driver.</> : <>Add your phone &amp; emergency contact on My rides for a safer trip.</>}</p>}
               <div className="mt-3 flex items-center justify-between gap-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Verified female drivers</span><Link to="/safety" className="font-semibold text-primary">Safety</Link></div>
             </div>
           </section>
