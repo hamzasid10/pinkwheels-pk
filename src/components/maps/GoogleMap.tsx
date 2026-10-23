@@ -27,7 +27,7 @@ export function loadGoogleMaps(): Promise<any> {
     s.async = true;
     s.onerror = () => { loader = null; reject(new Error("Map failed to load")); };
     document.head.appendChild(s);
-  });
+  }));
   return loader;
 }
 
