@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/lib/pink";
 import { useMode } from "@/components/ModeSwitch";
+import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import brandIcon from "@/assets/pink-wheel-icon.png";
 
