@@ -64,6 +64,13 @@
       "when": 1791579103218,
       "tag": "0008_driver_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792789286355,
+      "tag": "0009_ride_dispatch_statuses",
+      "breakpoints": true
     }
   ]
 }

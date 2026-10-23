@@ -823,6 +823,12 @@ export type Database = {
         | "ride_started"
         | "completed"
         | "cancelled"
+        | "searching"
+        | "offered"
+        | "accepted"
+        | "arrived"
+        | "in_progress"
+        | "expired"
       vehicle_kind: "car" | "scooty" | "bike"
     }
     CompositeTypes: {
@@ -983,6 +989,12 @@ export const Constants = {
         "ride_started",
         "completed",
         "cancelled",
+        "searching",
+        "offered",
+        "accepted",
+        "arrived",
+        "in_progress",
+        "expired",
       ],
       vehicle_kind: ["car", "scooty", "bike"],
     },
