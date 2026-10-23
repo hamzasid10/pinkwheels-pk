@@ -48,12 +48,17 @@ function BookPage() {
   const [info, setInfo] = useState<RouteInfo | null>(null);
   const [routing, setRouting] = useState(false);
   const [dots, setDots] = useState<{ lat: number; lng: number; vehicle: Vehicle | null }[]>([]);
-  const [f, setF] = useState({ ride_date: today, ride_time: now.toTimeString().slice(0, 5), rider_name: "", rider_phone: "", emergency_contact: "" });
+  const [f, setF] = useState({ ride_date: today, ride_time: now.toTimeString().slice(0, 5) });
   const [busy, setBusy] = useState(false);
   const [booked, setBooked] = useState<Booked | null>(null);
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
-  const name = f.rider_name || me.data?.profile?.full_name || "";
-  const phone = f.rider_phone || me.data?.profile?.phone || "";
+  const name = me.data?.profile?.full_name || "";
+  const phone = me.data?.profile?.phone || "";
+  const uid = me.data?.user.id;
+  const ec = useQuery({
+    queryKey: ["my-emergency-contact", uid],
+    enabled: !!uid,
+    queryFn: async () => (await supabase.from("emergency_contacts").select("name, phone").eq("user_id", uid!).order("created_at").limit(1)).data?.[0] ?? null,
+  });
   const mode = vehicle === "car" ? "DRIVE" : "TWO_WHEELER";
 
   useEffect(() => {
