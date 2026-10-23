@@ -1,15 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, ChevronDown, History, ShieldCheck, Users, Route as RouteIcon } from "lucide-react";
+import { CheckCircle2, Clock, History, ShieldCheck, Users, Route as RouteIcon } from "lucide-react";
 import { AppShell, Logo, Panel, SafetyActions, StatusPill } from "@/components/Brand";
 import { GoogleMap, type MapPin } from "@/components/maps/GoogleMap";
 import { PlaceInput, type Place } from "@/components/maps/PlaceInput";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { computeRoute, nearbyDrivers, reverseGeocode } from "@/lib/maps/maps.functions";
 import { inServiceArea } from "@/lib/maps/cities";
@@ -33,14 +31,6 @@ export const Route = createFileRoute("/_authenticated/book")({
   component: BookPage,
 });
 
-const schema = z.object({
-  ride_date: z.string().min(1, "Pick a date"),
-  ride_time: z.string().min(1, "Pick a time"),
-  rider_name: z.string().trim().min(2, "Enter your name").max(100),
-  rider_phone: z.string().trim().min(7, "Enter phone").max(20),
-  emergency_contact: z.string().trim().min(7, "Enter emergency contact").max(120),
-});
-
 type Booked = { id: string; booking_code: string; pickup: string; destination: string; vehicle: Vehicle; fare: number; status: RideStatus; trip_pin: string; route_polyline: string | null; pickup_lat: number | null; pickup_lng: number | null; dest_lat: number | null; dest_lng: number | null };
 type RouteInfo = { distanceKm: number; durationMin: number; polyline: string };
 
@@ -58,12 +48,17 @@ function BookPage() {
   const [info, setInfo] = useState<RouteInfo | null>(null);
   const [routing, setRouting] = useState(false);
   const [dots, setDots] = useState<{ lat: number; lng: number; vehicle: Vehicle | null }[]>([]);
-  const [f, setF] = useState({ ride_date: today, ride_time: now.toTimeString().slice(0, 5), rider_name: "", rider_phone: "", emergency_contact: "" });
+  const [f, setF] = useState({ ride_date: today, ride_time: now.toTimeString().slice(0, 5) });
   const [busy, setBusy] = useState(false);
   const [booked, setBooked] = useState<Booked | null>(null);
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
-  const name = f.rider_name || me.data?.profile?.full_name || "";
-  const phone = f.rider_phone || me.data?.profile?.phone || "";
+  const name = me.data?.profile?.full_name || "";
+  const phone = me.data?.profile?.phone || "";
+  const uid = me.data?.user.id;
+  const ec = useQuery({
+    queryKey: ["my-emergency-contact", uid],
+    enabled: !!uid,
+    queryFn: async () => (await supabase.from("emergency_contacts").select("name, phone").eq("user_id", uid!).order("created_at").limit(1)).data?.[0] ?? null,
+  });
   const mode = vehicle === "car" ? "DRIVE" : "TWO_WHEELER";
 
   useEffect(() => {
@@ -118,10 +113,6 @@ function BookPage() {
   if (pickup && !inServiceArea(pickup)) missing.push("Pickup must be in Lahore, Gujranwala, Islamabad or Rawalpindi");
   if (drop && !inServiceArea(drop)) missing.push("Drop-off must be in Lahore, Gujranwala, Islamabad or Rawalpindi");
   if (info && !fares.isLoading && fare == null) missing.push(`Fare — prices for ${vLabel} haven't been set by Pink Wheel yet`);
-  if (!f.ride_date || !f.ride_time) missing.push("Date and time");
-  if (name.trim().length < 2) missing.push("Rider name");
-  if (phone.trim().length < 7) missing.push("Phone number");
-  if (f.emergency_contact.trim().length < 7) missing.push("Emergency contact (name & phone)");
   const ready = missing.length === 0 && !routing && !!info && fare != null && !!me.data;
 
   async function submit(e: React.FormEvent) {
@@ -130,14 +121,15 @@ function BookPage() {
     if (!inServiceArea(pickup) || !inServiceArea(drop)) return toast.error("We currently serve Lahore, Gujranwala, Islamabad and Rawalpindi only.");
     if (!info) return toast.error("Waiting for the route…");
     if (fare == null) return toast.error("Fares for this vehicle are not set yet.");
-    const parsed = schema.safeParse({ ...f, rider_name: name, rider_phone: phone });
-    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message);
     if (!me.data || busy) return;
     setBusy(true);
     const { data, error } = await supabase
       .from("ride_requests")
       .insert({
-        ...parsed.data, vehicle, fare, rider_id: me.data.user.id,
+        ride_date: f.ride_date, ride_time: f.ride_time,
+        rider_name: name, rider_phone: phone,
+        emergency_contact: ec.data ? `${ec.data.name} — ${ec.data.phone}` : "",
+        vehicle, fare, rider_id: me.data.user.id,
         pickup: pickup.address, destination: drop.address,
         pickup_lat: pickup.lat, pickup_lng: pickup.lng, dest_lat: drop.lat, dest_lng: drop.lng,
         pickup_place_id: pickup.placeId, dest_place_id: drop.placeId,
@@ -223,21 +215,10 @@ function BookPage() {
               })}
             </div>
             <Button variant="ghost" className="mt-2 w-full justify-between rounded-xl border-t text-sm" asChild><Link to="/pool"><span className="flex items-center gap-2"><Users className="text-primary" /> Pink Pool · Shared rides</span><RouteIcon /></Link></Button>
-            <details className="rider-trip-details mt-3 border-t pt-3">
-              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold">Trip & contact details<ChevronDown className="h-4 w-4 text-muted-foreground" /></summary>
-              <div className="mt-3 space-y-3 pb-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label htmlFor="ride-date">Date</Label><Input id="ride-date" type="date" min={today} value={f.ride_date} onChange={set("ride_date")} /></div>
-                  <div><Label htmlFor="ride-time">Time</Label><Input id="ride-time" type="time" value={f.ride_time} onChange={set("ride_time")} /></div>
-                </div>
-                <div><Label htmlFor="rider-name">Rider name</Label><Input id="rider-name" value={name} onChange={set("rider_name")} /></div>
-                <div><Label htmlFor="rider-phone">Phone number</Label><Input id="rider-phone" type="tel" value={phone} onChange={set("rider_phone")} /></div>
-                <div><Label htmlFor="emergency-contact">Emergency contact (name & phone)</Label><Input id="emergency-contact" value={f.emergency_contact} onChange={set("emergency_contact")} placeholder="Ammi — 0300 1234567" /></div>
-              </div>
-            </details>
             <div className="rider-booking-action mt-3 bg-card pt-2">
               <Button type="submit" size="lg" className="w-full" disabled={busy || !ready}>{busy ? "Finding riders…" : fare != null ? `Find Riders · ${pkr(fare)}` : "Find Riders"}</Button>
               {!ready && !busy && <details className="mt-2 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium text-primary">{routing ? "Finding your route…" : `Complete ${missing.length} required ${missing.length === 1 ? "detail" : "details"}`}</summary><ul className="mt-2 list-disc space-y-1 pl-4">{missing.map((m) => <li key={m}>{m}</li>)}</ul></details>}
+              <p className="mt-2 text-[11px] text-muted-foreground">{ec.data ? <>Sharing your emergency contact {ec.data.name} with your driver.</> : phone ? <>Sharing your phone number with your driver.</> : <>Add your phone &amp; emergency contact on My rides for a safer trip.</>}</p>
               <div className="mt-3 flex items-center justify-between gap-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Verified female drivers</span><Link to="/safety" className="font-semibold text-primary">Safety</Link></div>
             </div>
           </section>
