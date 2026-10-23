@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Car, FileCheck, Headphones, Inbox } from "lucide-react";
 import { AppShell, Panel, SafetyActions, StatusPill, StatusTrack } from "@/components/Brand";
@@ -12,7 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { DriverPoolSection } from "@/components/Pool";
 import { DriverProfile } from "@/components/DriverProfile";
 import { pkr, useMe, type RideStatus } from "@/lib/pink";
-import { ModeCard } from "@/components/ModeSwitch";
+import { ModeCard, useMode } from "@/components/ModeSwitch";
+import { IncomingRideOffers } from "@/components/IncomingRideOffers";
+import { ACTIVE_DRIVER_STATUSES } from "@/lib/ride-dispatch";
 
 export const Route = createFileRoute("/_authenticated/driver")({
   head: () => ({ meta: [{ title: "Driver Profile — Pink Wheel" }, { name: "description", content: "Your verified driver profile, real trip earnings and ride controls." }, { property: "og:title", content: "Driver Profile — Pink Wheel" }, { property: "og:description", content: "Your verified driver profile, real trip earnings and ride controls." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -21,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/driver")({
 
 function DriverDashboard() {
   const me = useMe();
+  const { mode } = useMode();
   const uid = me.data?.user.id;
   const [pin, setPin] = useState("");
   const [onlineBusy, setOnlineBusy] = useState(false);
@@ -37,7 +40,14 @@ function DriverDashboard() {
     queryKey: ["driver-rides", uid], enabled: !!uid, refetchInterval: 8000,
     queryFn: async () => { if (!uid) return []; const { data, error } = await supabase.from("ride_requests").select("*").eq("driver_id", uid).order("created_at", { ascending: false }); if (error) throw error; return data ?? []; },
   });
-  const locErr = useShareLocation(uid, !!driver.data?.online && driver.data?.status === "approved" && !!me.data?.profile?.location_sharing);
+  useEffect(() => {
+    if (!uid || mode !== "driver") return;
+    const ch = supabase.channel(`driver-rides-${uid}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ride_requests", filter: `driver_id=eq.${uid}` }, () => { void rides.refetch(); })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [uid, mode]);
+  const locErr = useShareLocation(uid, !!driver.data?.online && mode === "driver" && driver.data?.status === "approved" && !!me.data?.profile?.location_sharing);
 
   if (driver.isLoading || me.isLoading || rides.isLoading || docs.isLoading) return <AppShell title="Driver profile"><p className="text-muted-foreground">Loading…</p></AppShell>;
   if (driver.isError || rides.isError || docs.isError) return <AppShell title="Driver profile"><p role="alert">Your driver information couldn't load.</p><Button onClick={() => { driver.refetch(); rides.refetch(); docs.refetch(); }}>Try again</Button></AppShell>;
@@ -48,7 +58,7 @@ function DriverDashboard() {
   const sharing = me.data?.profile?.location_sharing;
   const all = rides.data ?? [];
   const requests = all.filter((r) => r.status === "driver_assigned");
-  const current = all.find((r) => r.status === "driver_arriving" || r.status === "ride_started");
+  const current = all.find((r) => r.status !== "driver_assigned" && ACTIVE_DRIVER_STATUSES.includes(r.status));
   async function setStatus(id: string, status: RideStatus) {
     const { error } = await supabase.from("ride_requests").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
@@ -57,6 +67,7 @@ function DriverDashboard() {
 
   async function toggleOnline() {
     if (onlineBusy || d.status !== "approved" || me.data?.profile?.suspended) return;
+    if (mode !== "driver") return toast.info("Switch to Driver Mode before going online.");
     if (!d.online && !sharing) {
       document.getElementById("driver-safety")?.scrollIntoView({ behavior: "smooth" });
       toast.info("Turn on location sharing before going online.");
@@ -96,7 +107,8 @@ function DriverDashboard() {
       </div>
       {d.status === "approved" && <div id="driver-rides" className="grid scroll-mt-24 gap-5 md:grid-cols-2">
         <Panel title="New ride requests" icon={<Inbox className="h-4 w-4" />}>
-          {requests.length === 0 ? <p className="text-sm text-muted-foreground">No new requests. Rides assigned to you will appear here.</p> : (
+          <IncomingRideOffers uid={uid} enabled={mode === "driver" && d.online && d.status === "approved"} />
+          {requests.length === 0 ? null : (
             <ul className="space-y-3">
               {requests.map((r) => (
                 <li key={r.id} className="rounded-xl bg-muted p-3 text-sm">
@@ -117,7 +129,7 @@ function DriverDashboard() {
               <StatusTrack status={current.status as RideStatus} />
               <RideMap ride={current} track={false} />
               <p>Rider: <b>{current.rider_name}</b> · <a className="text-primary" href={`tel:${current.rider_phone}`}>{current.rider_phone}</a></p>
-              {current.status === "driver_arriving" ? (
+              {current.status === "accepted" ? <Button onClick={() => setStatus(current.id, "driver_arriving")}>On my way</Button> : current.status === "driver_arriving" ? <Button onClick={() => setStatus(current.id, "arrived")}>I've arrived</Button> : current.status === "arrived" ? (
                 <div className="flex gap-2">
                   <Input inputMode="numeric" maxLength={4} placeholder="Rider's Trip PIN" value={pin} onChange={(e) => setPin(e.target.value)} />
                   <Button onClick={() => { if (pin !== current.trip_pin) return toast.error("Incorrect Trip PIN"); setPin(""); setStatus(current.id, "ride_started"); }}>Start</Button>
