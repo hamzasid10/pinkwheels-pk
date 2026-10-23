@@ -80,6 +80,15 @@ function BookPage() {
   }, [pickup?.lat, pickup?.lng, drop?.lat, drop?.lng, mode]);
 
   useEffect(() => {
+    if (!booked || booked.pickup_lat == null || booked.pickup_lng == null) return;
+    const pos = { lat: booked.pickup_lat, lng: booked.pickup_lng };
+    const load = () => nearby({ data: pos }).then((d) => setDots(d as typeof dots)).catch(() => {});
+    load(); const t = setInterval(load, 10000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booked?.id]);
+
+  useEffect(() => {
     if (!pickup) return;
     nearby({ data: { lat: pickup.lat, lng: pickup.lng } }).then((d) => setDots(d as typeof dots)).catch(() => setDots([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,6 +154,7 @@ function BookPage() {
     const bp: MapPin[] = [];
     if (booked.pickup_lat != null && booked.pickup_lng != null) bp.push({ id: "pickup", pos: { lat: booked.pickup_lat, lng: booked.pickup_lng }, kind: "pickup" });
     if (booked.dest_lat != null && booked.dest_lng != null) bp.push({ id: "dropoff", pos: { lat: booked.dest_lat, lng: booked.dest_lng }, kind: "dropoff" });
+    dots.forEach((d, i) => bp.push({ id: `n${i}`, pos: { lat: d.lat, lng: d.lng }, kind: (d.vehicle ?? "car") as MapPin["kind"], label: "Nearby driver" }));
     return (
       <AppShell title="Ride booked">
         <Panel className="mx-auto max-w-lg">
@@ -155,7 +165,8 @@ function BookPage() {
               <p className="font-display text-2xl font-semibold">{booked.booking_code}</p>
             </div>
           </div>
-          <GoogleMap className="mt-4 h-56" pins={bp} polyline={booked.route_polyline} fitKey="booked" />
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-accent/50 px-3 py-2 text-sm"><span className="font-semibold">Finding riders near you</span><span className="text-muted-foreground">{dots.length} within 8 km</span></div>
+          <GoogleMap className="mt-2 h-72" pins={bp} fitKey={`booked-${dots.length}`} />
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div><dt className="text-muted-foreground">Pickup</dt><dd className="font-medium">{booked.pickup}</dd></div>
             <div><dt className="text-muted-foreground">Destination</dt><dd className="font-medium">{booked.destination}</dd></div>
@@ -225,7 +236,7 @@ function BookPage() {
               </div>
             </details>
             <div className="rider-booking-action mt-3 bg-card pt-2">
-              <Button type="submit" size="lg" className="w-full" disabled={busy || !ready}>{busy ? "Booking…" : fare != null ? `Book ${vLabel} · ${pkr(fare)}` : `Book ${vLabel}`}</Button>
+              <Button type="submit" size="lg" className="w-full" disabled={busy || !ready}>{busy ? "Finding riders…" : fare != null ? `Find Riders · ${pkr(fare)}` : "Find Riders"}</Button>
               {!ready && !busy && <details className="mt-2 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium text-primary">{routing ? "Finding your route…" : `Complete ${missing.length} required ${missing.length === 1 ? "detail" : "details"}`}</summary><ul className="mt-2 list-disc space-y-1 pl-4">{missing.map((m) => <li key={m}>{m}</li>)}</ul></details>}
               <div className="mt-3 flex items-center justify-between gap-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Verified female drivers</span><Link to="/safety" className="font-semibold text-primary">Safety</Link></div>
             </div>
