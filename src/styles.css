@@ -101,6 +101,42 @@
   --shadow-glow: 0 14px 34px -12px color-mix(in oklab, var(--primary) 55%, transparent);
 }
 
+/* Dark mode: charcoal backgrounds with the same pink brand accents. */
+html.dark {
+  --background: oklch(0.17 0.012 340);
+  --foreground: oklch(0.94 0.01 350);
+  --card: oklch(0.22 0.014 340);
+  --card-foreground: oklch(0.94 0.01 350);
+  --popover: oklch(0.22 0.014 340);
+  --popover-foreground: oklch(0.94 0.01 350);
+  --primary: oklch(0.7 0.13 357);
+  --primary-foreground: oklch(0.16 0.02 357);
+  --secondary: oklch(0.28 0.03 355);
+  --secondary-foreground: oklch(0.85 0.05 355);
+  --muted: oklch(0.26 0.014 350);
+  --muted-foreground: oklch(0.72 0.02 345);
+  --accent: oklch(0.31 0.05 355);
+  --accent-foreground: oklch(0.92 0.03 355);
+  --blush: oklch(0.34 0.06 355);
+  --driver-blush: oklch(0.28 0.03 355);
+  --destructive: oklch(0.65 0.19 22);
+  --destructive-foreground: oklch(0.16 0.02 22);
+  --success: oklch(0.72 0.12 160);
+  --success-foreground: oklch(0.16 0.02 160);
+  --border: oklch(0.32 0.022 352);
+  --input: oklch(0.34 0.025 352);
+  --ring: oklch(0.7 0.11 357);
+  --sidebar: oklch(0.2 0.012 350);
+  --sidebar-foreground: oklch(0.94 0.01 350);
+  --sidebar-accent: oklch(0.31 0.05 355);
+  --sidebar-accent-foreground: oklch(0.92 0.03 355);
+  --sidebar-border: oklch(0.32 0.022 352);
+  --gradient-rose: linear-gradient(135deg, oklch(0.62 0.12 2), oklch(0.52 0.14 352));
+  --gradient-blush: linear-gradient(180deg, oklch(0.24 0.022 355), oklch(0.17 0.012 340));
+  --shadow-soft: 0 8px 24px -12px color-mix(in oklab, var(--primary) 40%, transparent);
+  --shadow-card: 0 12px 40px -20px color-mix(in oklab, var(--primary) 45%, transparent);
+}
+
 @utility bg-gradient-rose { background-image: var(--gradient-rose); }
 @utility bg-gradient-blush { background-image: var(--gradient-blush); }
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
