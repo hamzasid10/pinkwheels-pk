@@ -132,7 +132,11 @@ function DriverDashboard() {
               {current.status === "accepted" ? <Button onClick={() => setStatus(current.id, "driver_arriving")}>On my way</Button> : current.status === "driver_arriving" ? <Button onClick={() => setStatus(current.id, "arrived")}>I've arrived</Button> : current.status === "arrived" ? (
                 <div className="flex gap-2">
                   <Input inputMode="numeric" maxLength={4} placeholder="Rider's Trip PIN" value={pin} onChange={(e) => setPin(e.target.value)} />
-                  <Button onClick={() => { if (pin !== current.trip_pin) return toast.error("Incorrect Trip PIN"); setPin(""); setStatus(current.id, "ride_started"); }}>Start</Button>
+                  <Button onClick={async () => {
+                    const { error } = await supabase.rpc("start_assigned_ride", { _ride: current.id, _pin: pin });
+                    if (error) return toast.error(error.message);
+                    setPin(""); void rides.refetch();
+                  }}>Start</Button>
                 </div>
               ) : (
                 <Button variant="hero" className="w-full" onClick={() => setStatus(current.id, "completed")}>Complete ride</Button>

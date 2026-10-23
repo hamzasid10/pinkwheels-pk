@@ -61,7 +61,9 @@ export function useShareLocation(driverId: string | undefined, enabled: boolean)
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     if (!enabled || !driverId || !("geolocation" in navigator)) return;
-    const watch = navigator.geolocation.watchPosition(async (pos) => {
+    last.current = 0;
+    let latest: GeolocationPosition | null = null;
+    const send = async (pos: GeolocationPosition) => {
       const now = Date.now();
       if (now - last.current < 10000) return;
       last.current = now;
@@ -70,11 +72,18 @@ export function useShareLocation(driverId: string | undefined, enabled: boolean)
         heading: pos.coords.heading, updated_at: new Date().toISOString(),
       });
       setError(e ? e.message : null);
-    }, (e) => {
+    };
+    const watch = navigator.geolocation.watchPosition((pos) => { latest = pos; void send(pos); }, (e) => {
+      latest = null;
       const msg = e.code === 1 ? "Location permission denied — riders can't see you on the map." : "Couldn't read your location.";
       setError(msg); toast.error(msg);
     }, { enableHighAccuracy: true, maximumAge: 5000 });
-    return () => navigator.geolocation.clearWatch(watch);
+    const heartbeat = setInterval(() => {
+      if (!latest || Date.now() - latest.timestamp > 60000) {
+        navigator.geolocation.getCurrentPosition((pos) => { latest = pos; void send(pos); }, () => { latest = null; }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 8000 });
+      } else void send(latest);
+    }, 10000);
+    return () => { clearInterval(heartbeat); navigator.geolocation.clearWatch(watch); };
   }, [enabled, driverId]);
   return error;
 }

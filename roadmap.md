@@ -1,5 +1,6 @@
-- [ ] Fix nearby ride offers, persisted mode, eligibility, realtime delivery and atomic acceptance.
-- [ ] Test dispatch, decline, expiry, concurrency and passenger/driver updates.
+- [x] Implement nearby ride offers, persisted mode, eligibility, realtime delivery and atomic acceptance.
+- [x] Run offer-expiry, active-mode, terminal-status and routing regression tests; verify guest protection and build.
+- [ ] Verify real dispatch, decline, concurrency and passenger/driver updates on two signed-in phones; blocked by no requesting-user preview account and driver session.
 - [x] Prepare full logo and compact icon from the supplied artwork.
 - [x] Apply branding to headers, sign-in, landing, About, and loading screens.
 - [x] Add favicon and home-screen icons with safe padding.
@@ -10,6 +11,6 @@
 - [x] Update rider booking to a map-first layout with reference-inspired ride choices and preserved required details.
 - [x] Open default rider signup/sign-in on booking while preserving history and role-specific navigation.
 - [x] Verify routing tests, guest protection and isolated mobile/desktop ride selection and contact editing.
-- [ ] Verify a real signed-in rider booking; awaiting preview sign-in, configured fares and a working Google Maps key on the test origin.
+- [ ] Verify a real signed-in rider booking; fares confirmed configured, awaiting preview sign-in and a working Google Maps key on the test origin.
 - [x] Add iPhone safe-area spacing to shared page headers and the booking map layout.
 - [x] Verify the header with a simulated iPhone inset and normal browser spacing.
