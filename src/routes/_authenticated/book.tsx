@@ -1,15 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, ChevronDown, History, ShieldCheck, Users, Route as RouteIcon } from "lucide-react";
+import { CheckCircle2, Clock, History, ShieldCheck, Users, Route as RouteIcon } from "lucide-react";
 import { AppShell, Logo, Panel, SafetyActions, StatusPill } from "@/components/Brand";
 import { GoogleMap, type MapPin } from "@/components/maps/GoogleMap";
 import { PlaceInput, type Place } from "@/components/maps/PlaceInput";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { computeRoute, nearbyDrivers, reverseGeocode } from "@/lib/maps/maps.functions";
 import { inServiceArea } from "@/lib/maps/cities";
