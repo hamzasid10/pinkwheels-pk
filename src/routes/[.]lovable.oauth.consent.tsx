@@ -17,7 +17,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   validateSearch: (s: Record<string, unknown>) => ({
     authorization_id: typeof s["authorization_id"] === "string" ? s["authorization_id"] : "",
   }),
-  head: () => ({ meta: [{ title: "Connect an app — Pink Wheel" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Connect an app — Pink Wheel" }, { name: "description", content: "Review an assistant's request to access your Pink Wheel rides." }, { property: "og:title", content: "Connect an app — Pink Wheel" }, { property: "og:description", content: "Securely review and approve access to your Pink Wheel account." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   beforeLoad: async ({ search, location }) => {
     if (!search.authorization_id) throw new Error("This connection link is missing its request ID.");
     const { data } = await supabase.auth.getSession();
