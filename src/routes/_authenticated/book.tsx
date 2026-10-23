@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CarFront, ChevronUp, Clock, History, Loader2, ShieldCheck, Users, X } from "lucide-react";
+import { CarFront, ChevronUp, Clock, History, Loader2, ShieldCheck, Users, X, User, Phone, MessageCircle } from "lucide-react";
 import { Logo, SafetyActions, StatusPill } from "@/components/Brand";
 import { GoogleMap, type MapPin } from "@/components/maps/GoogleMap";
 import { PlaceInput, type Place } from "@/components/maps/PlaceInput";
@@ -17,6 +17,7 @@ import { MobileMenu } from "@/components/MobileMenu";
 import rideCar from "@/assets/ride-car.png";
 import rideScooty from "@/assets/ride-scooty.png";
 import rideBike from "@/assets/ride-bike.png";
+import { dispatchLog, SEARCHING_STATUSES, TERMINAL_RIDE_STATUSES } from "@/lib/ride-dispatch";
 
 const vehicleImages = { car: rideCar, scooty: rideScooty, bike: rideBike };
 
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/book")({
   component: BookPage,
 });
 
-type Booked = { id: string; booking_code: string; pickup: string; destination: string; vehicle: Vehicle; fare: number; status: RideStatus; trip_pin: string; route_polyline: string | null; pickup_lat: number | null; pickup_lng: number | null; dest_lat: number | null; dest_lng: number | null };
+type Booked = { id: string; booking_code: string; pickup: string; destination: string; vehicle: Vehicle; fare: number; status: RideStatus; trip_pin: string; route_polyline: string | null; pickup_lat: number | null; pickup_lng: number | null; dest_lat: number | null; dest_lng: number | null; driver_id?: string | null; driver_name?: string | null; driver_phone?: string | null; driver_vehicle?: string | null; driver_plate?: string | null; driver_rating?: number | null; driver_photo_url?: string | null };
 type RouteInfo = { distanceKm: number; durationMin: number; polyline: string };
 
 function BookPage() {
@@ -60,7 +61,7 @@ function BookPage() {
   const ec = useQuery({
     queryKey: ["my-emergency-contact", uid],
     enabled: !!uid,
-    queryFn: async () => (await supabase.from("emergency_contacts").select("name, phone").eq("user_id", uid!).order("created_at").limit(1)).data?.[0] ?? null,
+    queryFn: async () => { if (!uid) return null; return (await supabase.from("emergency_contacts").select("name, phone").eq("user_id", uid).order("created_at").limit(1)).data?.[0] ?? null; },
   });
   const mode = vehicle === "car" ? "DRIVE" : "TWO_WHEELER";
 
@@ -87,13 +88,24 @@ function BookPage() {
   }, [booked?.id]);
 
   useEffect(() => {
-    if (!booked || booked.status === "cancelled") return;
-    const t = setInterval(async () => {
-      const { data } = await supabase.from("ride_requests").select("status").eq("id", booked.id).single();
-      if (data && data.status !== booked.status) setBooked((b) => b && { ...b, status: data.status as RideStatus });
-    }, 6000);
-    return () => clearInterval(t);
-  }, [booked?.id, booked?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!booked || TERMINAL_RIDE_STATUSES.includes(booked.status)) return;
+    const id = booked.id;
+    let live = true;
+    const refresh = async () => {
+      const { error } = await supabase.rpc("dispatch_tick", { _ride: id });
+      if (error) dispatchLog("search refresh failed", error.message);
+      const { data } = await supabase.from("ride_requests").select("*").eq("id", id).single();
+      if (live && data) setBooked(data as Booked);
+    };
+    const channel = supabase.channel(`passenger-ride-${id}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "ride_requests", filter: `id=eq.${id}` }, (payload) => {
+        dispatchLog("passenger acceptance update", payload.new);
+        if (live) setBooked(payload.new as Booked);
+      }).subscribe((status) => { dispatchLog("passenger subscription", status); if (status === "SUBSCRIBED") void refresh(); });
+    void refresh();
+    const t = setInterval(refresh, 3000);
+    return () => { live = false; clearInterval(t); void supabase.removeChannel(channel); };
+  }, [booked?.id, !!booked && TERMINAL_RIDE_STATUSES.includes(booked.status)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!pickup) return;
@@ -147,11 +159,12 @@ function BookPage() {
         pickup_place_id: pickup.placeId, dest_place_id: drop.placeId,
         distance_km: info.distanceKm, duration_min: info.durationMin, route_polyline: info.polyline,
       })
-      .select("id, booking_code, pickup, destination, vehicle, fare, status, trip_pin, route_polyline, pickup_lat, pickup_lng, dest_lat, dest_lng")
+      .select("*")
       .single();
     setBusy(false);
     if (error) return toast.error(error.message.includes("Fares") ? "Fares for this vehicle aren't set yet." : "Couldn't book your ride. Please try again.");
     setBooked(data as Booked);
+    dispatchLog("request created", data?.id);
   }
 
   async function cancelBooking() {
@@ -171,8 +184,8 @@ function BookPage() {
     dots.forEach((d, i) => bookedPins.push({ id: `n${i}`, pos: { lat: d.lat, lng: d.lng }, kind: (d.vehicle ?? "car") as MapPin["kind"], label: "Nearby driver" }));
   }
   const both = !!pickup && !!drop;
-  const searching = booked && booked.status === "requested";
-  const cta = fare != null ? `Confirm ${vLabel} — ${pkr(fare)}` : "Confirm Pink Wheel";
+  const searching = booked && SEARCHING_STATUSES.includes(booked.status);
+  const cta = fare != null ? `Find Riders — ${pkr(fare)}` : "Find Riders";
 
   return (
     <div className="rider-booking bg-background">
@@ -204,15 +217,21 @@ function BookPage() {
                 <div className="text-center">
                   <div className="relative mx-auto my-3 grid h-16 w-16 place-items-center"><span className="search-ring" /><span className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground"><CarFront /></span></div>
                   <h2 className="font-sans text-lg font-bold">Finding your Pink Wheel driver…</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">{dots.length} verified driver{dots.length === 1 ? "" : "s"} within 8 km · {booked.booking_code}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Looking for an available verified driver · {booked.booking_code}</p>
                 </div>
               ) : booked.status === "cancelled" ? (
                 <h2 className="text-center font-sans text-lg font-bold">Ride cancelled</h2>
+              ) : booked.status === "expired" ? (
+                <div className="text-center"><h2 className="font-sans text-lg font-bold">No driver accepted this time</h2><Button className="mt-3" onClick={() => setBooked(null)}>Search again</Button></div>
               ) : (
                 <div className="animate-fade-in">
-                  <h2 className="font-sans text-lg font-bold">Your driver is on the way</h2>
+                  <h2 className="font-sans text-lg font-bold">{booked.status === "completed" ? "Ride completed" : ["ride_started", "in_progress"].includes(booked.status) ? "Your ride is underway" : booked.status === "arrived" ? "Your driver has arrived" : booked.status === "driver_assigned" ? "Driver assigned · awaiting acceptance" : "Your driver is on the way"}</h2>
                   <div className="mt-1"><StatusPill status={booked.status} /></div>
-                  <p className="mt-2 text-xs text-muted-foreground">See her name, vehicle, plate and live location on your trip page.</p>
+                  {booked.driver_name && <div className="mt-3 flex items-center gap-3 text-sm">
+                    {booked.driver_photo_url ? <img src={booked.driver_photo_url} alt="Your driver" className="h-10 w-10 rounded-full object-cover" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-accent"><User className="h-5 w-5 text-primary" /></span>}
+                    <div className="min-w-0 flex-1"><p className="font-semibold">{booked.driver_name} · Verified</p><p className="text-xs text-muted-foreground">{booked.driver_vehicle} · {booked.driver_plate}</p><p className="text-xs text-muted-foreground">{booked.driver_rating != null ? `${booked.driver_rating} ★` : "Not rated yet"}</p></div>
+                    {booked.driver_phone && <><Button size="icon" variant="outline" asChild><a aria-label="Call driver" href={`tel:${booked.driver_phone}`}><Phone /></a></Button><Button size="icon" variant="outline" asChild><a aria-label="Message driver" href={`sms:${booked.driver_phone}`}><MessageCircle /></a></Button></>}
+                  </div>}
                 </div>
               )}
               <dl className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-muted p-3 text-xs">
@@ -237,7 +256,7 @@ function BookPage() {
           </section>
           {(routing || info) && (
             <div className="route-chip animate-fade-in flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background shadow-card" role="status">
-              {routing ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Finding route…</> : <><Clock className="h-3.5 w-3.5" /> {info!.distanceKm} km • {info!.durationMin} min</>}
+              {routing ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Finding route…</> : info ? <><Clock className="h-3.5 w-3.5" /> {info.distanceKm} km • {info.durationMin} min</> : null}
             </div>
           )}
           <section aria-label="Choose your ride" data-snap={snap} className="rider-ride-sheet bg-card shadow-card">
