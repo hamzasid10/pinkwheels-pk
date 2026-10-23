@@ -31,14 +31,6 @@ export const Route = createFileRoute("/_authenticated/book")({
   component: BookPage,
 });
 
-const schema = z.object({
-  ride_date: z.string().min(1, "Pick a date"),
-  ride_time: z.string().min(1, "Pick a time"),
-  rider_name: z.string().trim().min(2, "Enter your name").max(100),
-  rider_phone: z.string().trim().min(7, "Enter phone").max(20),
-  emergency_contact: z.string().trim().min(7, "Enter emergency contact").max(120),
-});
-
 type Booked = { id: string; booking_code: string; pickup: string; destination: string; vehicle: Vehicle; fare: number; status: RideStatus; trip_pin: string; route_polyline: string | null; pickup_lat: number | null; pickup_lng: number | null; dest_lat: number | null; dest_lng: number | null };
 type RouteInfo = { distanceKm: number; durationMin: number; polyline: string };
 
