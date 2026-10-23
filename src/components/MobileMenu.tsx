@@ -32,6 +32,7 @@ export function MobileMenu({ className }: { className?: string }) {
   const isAdmin = user?.role === "admin";
   const { mode } = useMode();
   const driverMode = mode === "driver";
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const items: Item[] = driverMode ? [
     { label: "Driver Home", to: "/driver", icon: LayoutDashboard, auth: true },
