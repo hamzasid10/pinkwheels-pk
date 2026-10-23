@@ -186,7 +186,7 @@ function BookPage() {
       {safety && (
         <div className="animate-fade-in absolute right-3 z-50 w-72 rounded-3xl bg-card p-4 shadow-card md:right-6" style={{ top: "calc(var(--safe-area-top) + 64px)" }}>
           <div className="mb-3 flex items-center justify-between"><p className="font-semibold">Safety tools</p><button type="button" aria-label="Close safety" onClick={() => setSafety(false)}><X className="h-4 w-4" /></button></div>
-          <SafetyActions rideId={booked?.id} shareText={booked ? `My Pink Wheel ride ${booked.booking_code}: ${booked.pickup} → ${booked.destination}` : `I'm booking a Pink Wheel ride${pickup && drop ? `: ${pickup.address} → ${drop.address}` : ""}`} />
+          <SafetyActions {...(booked ? { rideId: booked.id } : {})} shareText={booked ? `My Pink Wheel ride ${booked.booking_code}: ${booked.pickup} → ${booked.destination}` : `I'm booking a Pink Wheel ride${pickup && drop ? `: ${pickup.address} → ${drop.address}` : ""}`} />
           <p className="mt-3 text-xs text-muted-foreground">Emergency contact: {ec.data ? `${ec.data.name} · ${ec.data.phone}` : <Link to="/rider" className="text-primary">add one</Link>}</p>
           <Link to="/safety" className="mt-2 block text-xs font-semibold text-primary">Open Safety Center →</Link>
         </div>
